@@ -564,9 +564,25 @@
             if (document.body.classList.contains('presentation-mode')) {
                 document.body.classList.remove('presentation-mode');
                 console.log('Exited presentation mode');
+                // Also try to exit browser full-screen if possible
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                }
             } else {
                 document.body.classList.add('presentation-mode');
                 console.log('Entered presentation mode');
+                // Also try to enter browser full-screen
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen) {
+                    document.documentElement.mozRequestFullScreen();
+                }
             }
         }
 
@@ -1624,6 +1640,21 @@
                 console.error('Score dock not found!');
             }
         }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // F11 key for full-screen toggle
+            if (event.key === 'F11') {
+                event.preventDefault();
+                togglePresentationMode();
+            }
+            // Escape key to exit full-screen
+            if (event.key === 'Escape') {
+                if (document.body.classList.contains('presentation-mode')) {
+                    togglePresentationMode();
+                }
+            }
+        });
 
         // Event listeners
         function setupEventListeners() {
