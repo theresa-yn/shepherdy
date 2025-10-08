@@ -182,6 +182,7 @@
         <div class="set-selector">
             <button class="set-btn" onclick="startGame('set1')">Set 1</button>
             <button class="set-btn" onclick="startGame('set2')">Set 2</button>
+            <button class="presentation-btn" onclick="togglePresentationMode()">Full Screen</button>
         </div>
     </div>
     
@@ -557,6 +558,17 @@
                 }
             ]
         };
+
+        // Toggle presentation mode for full-screen experience
+        function togglePresentationMode() {
+            if (document.body.classList.contains('presentation-mode')) {
+                document.body.classList.remove('presentation-mode');
+                console.log('Exited presentation mode');
+            } else {
+                document.body.classList.add('presentation-mode');
+                console.log('Entered presentation mode');
+            }
+        }
 
         // Initialize the game
         function initGame() {
