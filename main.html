@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHEPHERDY - The Ultimate Trivia Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Main page specific styles */
+        .main-intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('sheep.jpg') center 30%/cover no-repeat fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease;
+        }
+
+        .main-intro.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(0, 0, 0, 0.3) 0%, 
+                rgba(0, 0, 0, 0.1) 30%, 
+                rgba(0, 0, 0, 0.2) 70%, 
+                rgba(0, 0, 0, 0.4) 100%);
+            z-index: 1;
+        }
+
+        .intro-title {
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            font-size: 6rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700, #FFA500);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleFlow 6s ease-in-out infinite, shimmer 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+            transform: perspective(300px) rotateX(8deg) rotateY(-2deg);
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes titleFlow {
+            0% { transform: perspective(300px) rotateX(8deg) rotateY(-2deg) scale(1) translateY(0px); }
+            25% { transform: perspective(300px) rotateX(6deg) rotateY(-1deg) scale(1.01) translateY(-2px); }
+            50% { transform: perspective(300px) rotateX(10deg) rotateY(-3deg) scale(1.02) translateY(-1px); }
+            75% { transform: perspective(300px) rotateX(7deg) rotateY(-2deg) scale(1.01) translateY(-3px); }
+            100% { transform: perspective(300px) rotateX(8deg) rotateY(-2deg) scale(1) translateY(0px); }
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .set-selector {
+            display: flex;
+            gap: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .set-btn {
+            padding: 15px 30px;
+            background: linear-gradient(145deg, #FFD700, #FFA500);
+            color: #000;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .set-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .set-btn:hover {
+            background: linear-gradient(145deg, #5A8C69, #4A7C59);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .set-btn:hover::before {
+            left: 100%;
+        }
+
+        .set-btn:active {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Game container - initially hidden */
+        .game-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .game-container.active {
+            display: block;
+        }
+
+        /* Set switcher */
+        .set-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+
+        .switch-btn {
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #FFD700;
+            border: 2px solid #FFD700;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .switch-btn:hover {
+            background: #FFD700;
+            color: #000;
+        }
+
+        .switch-btn.active {
+            background: #FFD700;
+            color: #000;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .intro-title { font-size: 4rem; }
+            .set-btn { font-size: 1rem; padding: 12px 24px; }
+            .set-selector { flex-direction: column; gap: 15px; }
+        }
+
+        @media (max-width: 480px) {
+            .intro-title { font-size: 3rem; }
+            .set-btn { font-size: 0.9rem; padding: 10px 20px; }
+        }
+    </style>
+</head>
+<body class="presentation-mode">
+    <!-- Main Introduction Screen -->
+    <div class="main-intro" id="mainIntro">
+        <div class="intro-overlay"></div>
+        <h1 class="intro-title">SHEPHERDY</h1>
+        <div class="set-selector">
+            <button class="set-btn" onclick="startGame('set1')">Set 1</button>
+            <button class="set-btn" onclick="startGame('set2')">Set 2</button>
+        </div>
+    </div>
+    
+    <!-- Set Switcher (visible when game is active) -->
+    <div class="set-switcher" id="setSwitcher" style="display: none;">
+        <button class="switch-btn" id="set1Switch" onclick="switchToSet('set1')">Set 1</button>
+        <button class="switch-btn" id="set2Switch" onclick="switchToSet('set2')">Set 2</button>
+        <button class="switch-btn" onclick="showTracker()">Score Tracker</button>
+        <button class="switch-btn" onclick="showMainIntro()">Main</button>
+    </div>
+
+    <!-- Game Container for Set 1 -->
+    <div class="game-container" id="set1Container">
+        <header class="game-header">
+            <h1>SHEPHERDY - Set 1</h1>
+        </header>
+        
+        <div class="game-board" id="set1GameBoard">
+            <!-- Categories will be populated by JavaScript -->
+        </div>
+        
+        <!-- Score Dock for Set 1 -->
+        <div class="score-dock">
+            <div class="score-chip">
+                <div class="name" id="set1Team1Name" contenteditable="true">Team 1</div>
+                <div class="score" id="set1Team1Score">0 Points</div>
+                <div class="dock-controls">
+                    <button onclick="addPointsTo(1, 200)">+200</button>
+                    <button onclick="addPointsTo(1, 400)">+400</button>
+                    <button onclick="addPointsTo(1, 600)">+600</button>
+                    <button onclick="addPointsTo(1, 800)">+800</button>
+                    <button onclick="addPointsTo(1, 1000)">+1000</button>
+                    <button onclick="subtractPointsFrom(1, 200)">-200</button>
+                    <button onclick="subtractPointsFrom(1, 400)">-400</button>
+                    <button onclick="subtractPointsFrom(1, 600)">-600</button>
+                    <button onclick="subtractPointsFrom(1, 800)">-800</button>
+                    <button onclick="subtractPointsFrom(1, 1000)">-1000</button>
+                </div>
+            </div>
+            <div class="score-chip">
+                <div class="name" id="set1Team2Name" contenteditable="true">Team 2</div>
+                <div class="score" id="set1Team2Score">0 Points</div>
+                <div class="dock-controls">
+                    <button onclick="addPointsTo(2, 200)">+200</button>
+                    <button onclick="addPointsTo(2, 400)">+400</button>
+                    <button onclick="addPointsTo(2, 600)">+600</button>
+                    <button onclick="addPointsTo(2, 800)">+800</button>
+                    <button onclick="addPointsTo(2, 1000)">+1000</button>
+                    <button onclick="subtractPointsFrom(2, 200)">-200</button>
+                    <button onclick="subtractPointsFrom(2, 400)">-400</button>
+                    <button onclick="subtractPointsFrom(2, 600)">-600</button>
+                    <button onclick="subtractPointsFrom(2, 800)">-800</button>
+                    <button onclick="subtractPointsFrom(2, 1000)">-1000</button>
+                </div>
+            </div>
+            <div class="score-chip">
+                <div class="name" id="set1Team3Name" contenteditable="true">Team 3</div>
+                <div class="score" id="set1Team3Score">0 Points</div>
+                <div class="dock-controls">
+                    <button onclick="addPointsTo(3, 200)">+200</button>
+                    <button onclick="addPointsTo(3, 400)">+400</button>
+                    <button onclick="addPointsTo(3, 600)">+600</button>
+                    <button onclick="addPointsTo(3, 800)">+800</button>
+                    <button onclick="addPointsTo(3, 1000)">+1000</button>
+                    <button onclick="subtractPointsFrom(3, 200)">-200</button>
+                    <button onclick="subtractPointsFrom(3, 400)">-400</button>
+                    <button onclick="subtractPointsFrom(3, 600)">-600</button>
+                    <button onclick="subtractPointsFrom(3, 800)">-800</button>
+                    <button onclick="subtractPointsFrom(3, 1000)">-1000</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="question-modal" id="set1QuestionModal">
+                <div class="modal-content">
+                    <div class="question-header">
+                    <span class="category-name" id="set1CategoryName"></span>
+                    <span class="point-value" id="set1PointValue"></span>
+                    </div>
+                <div class="question-text" id="set1QuestionText"></div>
+                <div class="question-answer" id="set1QuestionAnswer" style="display: none;"></div>
+                    <div class="modal-controls">
+                    <button id="set1ShowAnswerBtn" class="btn btn-primary">Show Answer</button>
+                    <button id="set1CloseModalBtn" class="btn btn-secondary">Close</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+    <!-- Game Container for Set 2 -->
+    <div class="game-container" id="set2Container">
+        <header class="game-header">
+            <h1>SHEPHERDY - Set 2</h1>
+        </header>
+        
+        <div class="game-board" id="set2GameBoard">
+            <!-- Categories will be populated by JavaScript -->
+        </div>
+        
+        <!-- Score Dock for Set 2 -->
+        <div class="score-dock">
+            <div class="score-chip">
+                <div class="name" id="set2Team1Name" contenteditable="true">Team 1</div>
+                <div class="score" id="set2Team1Score">0 Points</div>
+                <div class="dock-controls">
+                    <button onclick="addPointsTo(1, 200)">+200</button>
+                    <button onclick="addPointsTo(1, 400)">+400</button>
+                    <button onclick="addPointsTo(1, 600)">+600</button>
+                    <button onclick="addPointsTo(1, 800)">+800</button>
+                    <button onclick="addPointsTo(1, 1000)">+1000</button>
+                    <button onclick="subtractPointsFrom(1, 200)">-200</button>
+                    <button onclick="subtractPointsFrom(1, 400)">-400</button>
+                    <button onclick="subtractPointsFrom(1, 600)">-600</button>
+                    <button onclick="subtractPointsFrom(1, 800)">-800</button>
+                    <button onclick="subtractPointsFrom(1, 1000)">-1000</button>
+                </div>
+            </div>
+            <div class="score-chip">
+                <div class="name" id="set2Team2Name" contenteditable="true">Team 2</div>
+                <div class="score" id="set2Team2Score">0 Points</div>
+                <div class="dock-controls">
+                    <button onclick="addPointsTo(2, 200)">+200</button>
+                    <button onclick="addPointsTo(2, 400)">+400</button>
+                    <button onclick="addPointsTo(2, 600)">+600</button>
+                    <button onclick="addPointsTo(2, 800)">+800</button>
+                    <button onclick="addPointsTo(2, 1000)">+1000</button>
+                    <button onclick="subtractPointsFrom(2, 200)">-200</button>
+                    <button onclick="subtractPointsFrom(2, 400)">-400</button>
+                    <button onclick="subtractPointsFrom(2, 600)">-600</button>
+                    <button onclick="subtractPointsFrom(2, 800)">-800</button>
+                    <button onclick="subtractPointsFrom(2, 1000)">-1000</button>
+                </div>
+                    </div>
+            <div class="score-chip">
+                <div class="name" id="set2Team3Name" contenteditable="true">Team 3</div>
+                <div class="score" id="set2Team3Score">0 Points</div>
+                <div class="dock-controls">
+                    <button onclick="addPointsTo(3, 200)">+200</button>
+                    <button onclick="addPointsTo(3, 400)">+400</button>
+                    <button onclick="addPointsTo(3, 600)">+600</button>
+                    <button onclick="addPointsTo(3, 800)">+800</button>
+                    <button onclick="addPointsTo(3, 1000)">+1000</button>
+                    <button onclick="subtractPointsFrom(3, 200)">-200</button>
+                    <button onclick="subtractPointsFrom(3, 400)">-400</button>
+                    <button onclick="subtractPointsFrom(3, 600)">-600</button>
+                    <button onclick="subtractPointsFrom(3, 800)">-800</button>
+                    <button onclick="subtractPointsFrom(3, 1000)">-1000</button>
+                </div>
+        </div>
+    </div>
+
+        <div class="question-modal" id="set2QuestionModal">
+            <div class="modal-content">
+                <div class="question-header">
+                    <span class="category-name" id="set2CategoryName"></span>
+                    <span class="point-value" id="set2PointValue"></span>
+                </div>
+                <div class="question-text" id="set2QuestionText"></div>
+                <div class="question-answer" id="set2QuestionAnswer" style="display: none;"></div>
+                <div class="modal-controls">
+                    <button id="set2ShowAnswerBtn" class="btn btn-primary">Show Answer</button>
+                    <button id="set2CloseModalBtn" class="btn btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Tracker Overlay -->
+    <div class="tracker-overlay" id="trackerOverlay">
+        <div class="tracker-card">
+            <h2 class="tracker-title">Score Tracker</h2>
+            <div class="tracker-grid">
+                <div class="tracker-team">
+                    <div class="tracker-name" id="trackerTeam1Name" contenteditable="true">Team 1</div>
+                    <div class="tracker-score" id="trackerTeam1Score">0 Points</div>
+                    <div class="tracker-controls">
+                        <button onclick="trackerAddPoints(1, 200)">+200</button>
+                        <button onclick="trackerAddPoints(1, 400)">+400</button>
+                        <button onclick="trackerAddPoints(1, 600)">+600</button>
+                        <button onclick="trackerAddPoints(1, 800)">+800</button>
+                        <button onclick="trackerAddPoints(1, 1000)">+1000</button>
+                        <button onclick="trackerSubtractPoints(1, 200)">-200</button>
+                        <button onclick="trackerSubtractPoints(1, 400)">-400</button>
+                        <button onclick="trackerSubtractPoints(1, 600)">-600</button>
+                        <button onclick="trackerSubtractPoints(1, 800)">-800</button>
+                        <button onclick="trackerSubtractPoints(1, 1000)">-1000</button>
+                </div>
+                </div>
+                <div class="tracker-team">
+                    <div class="tracker-name" id="trackerTeam2Name" contenteditable="true">Team 2</div>
+                    <div class="tracker-score" id="trackerTeam2Score">0 Points</div>
+                    <div class="tracker-controls">
+                        <button onclick="trackerAddPoints(2, 200)">+200</button>
+                        <button onclick="trackerAddPoints(2, 400)">+400</button>
+                        <button onclick="trackerAddPoints(2, 600)">+600</button>
+                        <button onclick="trackerAddPoints(2, 800)">+800</button>
+                        <button onclick="trackerAddPoints(2, 1000)">+1000</button>
+                        <button onclick="trackerSubtractPoints(2, 200)">-200</button>
+                        <button onclick="trackerSubtractPoints(2, 400)">-400</button>
+                        <button onclick="trackerSubtractPoints(2, 600)">-600</button>
+                        <button onclick="trackerSubtractPoints(2, 800)">-800</button>
+                        <button onclick="trackerSubtractPoints(2, 1000)">-1000</button>
+                    </div>
+                </div>
+                <div class="tracker-team">
+                    <div class="tracker-name" id="trackerTeam3Name" contenteditable="true">Team 3</div>
+                    <div class="tracker-score" id="trackerTeam3Score">0 Points</div>
+                    <div class="tracker-controls">
+                        <button onclick="trackerAddPoints(3, 200)">+200</button>
+                        <button onclick="trackerAddPoints(3, 400)">+400</button>
+                        <button onclick="trackerAddPoints(3, 600)">+600</button>
+                        <button onclick="trackerAddPoints(3, 800)">+800</button>
+                        <button onclick="trackerAddPoints(3, 1000)">+1000</button>
+                        <button onclick="trackerSubtractPoints(3, 200)">-200</button>
+                        <button onclick="trackerSubtractPoints(3, 400)">-400</button>
+                        <button onclick="trackerSubtractPoints(3, 600)">-600</button>
+                        <button onclick="trackerSubtractPoints(3, 800)">-800</button>
+                        <button onclick="trackerSubtractPoints(3, 1000)">-1000</button>
+                    </div>
+                </div>
+            </div>
+            <div class="tracker-close">
+                <button class="btn btn-secondary" onclick="resetScores()">Reset Scores</button>
+                <button class="btn btn-secondary" onclick="closeTracker()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Intro Overlay -->
+    <div class="category-intro" id="categoryIntro" style="display: none;">
+        <div class="title" id="categoryIntroTitle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Global variables
+        let currentSet = 'set1';
+        let audioEnabled = true;
+        let currentQuestion = null;
+        let currentAudio = null; // Store reference to currently playing audio
+        let introMusicStarted = false; // Track if intro music has been started
+        let introMusicAudio = null; // Store reference to intro music
+        let answeredQuestions = { set1: new Set(), set2: new Set() }; // Track answered questions
+
+        // Game data for Set 1
+        const set1GameData = {
+            categories: [
+                {
+                    name: "PROVINCES",
+                    questions: [
+                        { question: "How many Province Leaders did Mid-North America have?", answer: "Four – Barbara Beasley, Rosaria Baxter, Mary Catherine Massei, and Madeleine Muinday", value: 200 },
+                        { question: "Name the past three Province Leaders of New York/Toronto", answer: "Maureen McGowan, Ellen Kelley, and Yvette Arnold", value: 400 },
+                        { question: "When did Central South become a Province?", answer: "2014", value: 600 },
+                        { question: "How many former Province Leaders are present at this Chapter?", answer: "Eight – Barbara, Carol P., Francisca, Maureen, Joan, Yvette, Catherine, and Madeleine", value: 800 },
+                        { question: "How many countries are Good Shepherd Sisters present in as of this date?", answer: "67", value: 1000 }
+                    ]
+                },
+                {
+                    name: "DATES",
+                    questions: [
+                        { question: "When did the first Good Shepherd Sisters come to the United States?", answer: "1842 (Louisville, Kentucky)", value: 200 },
+                        { question: "When did the first Good Shepherd Sisters come to Canada?", answer: "1844 (Montreal)", value: 400 },
+                        { question: "When did the first OLC Sisters come to the United States?", answer: "1857 (Buffalo, New York)", value: 600 },
+                        { question: "What is the date of Blessed Aguchita's martyrdom?", answer: "September 27, 1990", value: 800 },
+                        { question: "What is the Feast Day of Blessed Thérèse de Soubiran?", answer: "June 7", value: 1000 }
+                    ]
+                },
+                {
+                    name: "FOUNDRESS'S QUOTATIONS",
+                    questions: [
+                        { question: "'Gratitude is the ______ of the heart.'", answer: "Memory", value: 200 },
+                        { question: "'Love is a ______, it must be put into practice.'", answer: "Verb / action", value: 400 },
+                        { question: "'The charity of the Good Shepherd is a _____ charity.'", answer: "Universal", value: 600 },
+                        { question: "'Our mission is to _____ the brokenhearted.'", answer: "Heal", value: 800 },
+                        { question: "'Zeal is the _____ of our Institute.'", answer: "Flaming torch 🔥", value: 1000 }
+                    ]
+                },
+                {
+                    name: "SCRIPTURE",
+                    questions: [
+                        { question: "Psalm 23:1", answer: "The Lord is my Shepherd, I shall not want", value: 200 },
+                        { question: "Psalm 100:3", answer: "Know that the Lord is God. It is he who made us, and we are his; we are his people, the sheep of his pasture", value: 400 },
+                        { question: "Ezekiel 34:11", answer: "For this is what the Sovereign Lord says: I myself will search for my sheep and look after them. As a shepherd looks after his scattered flock when he is with them, so will I look after my sheep. I will rescue them from all the places where they were scattered on a day of clouds and darkness", value: 600 },
+                        { question: "John 10:11", answer: "I am the good shepherd. The good shepherd lays down his life for the sheep", value: 800 },
+                        { question: "Luke 2:8", answer: "And there were shepherds residing in the fields nearby, keeping watch over their flocks by night", value: 1000 }
+                    ]
+                },
+                {
+                    name: "SONGS & BASEBALL TEAMS",
+                    questions: [
+                        { question: "I Left My Heart in San Francisco – Tony Bennett", answer: "San Francisco Giants", value: 200 },
+                        { question: "New York, New York – Frank Sinatra", answer: "Yankees and Mets", value: 400 },
+                        { question: "Please Come to Boston – Dave Loggins", answer: "Boston Red Sox", value: 600 },
+                        { question: "My Kind of Town (Chicago Is) – Frank Sinatra", answer: "Chicago Cubs and White Sox", value: 800 },
+                        { question: "Meet Me in St. Louis – Judy Garland", answer: "St. Louis Cardinals", value: 1000 }
+                    ]
+                },
+                {
+                    name: "SHEEP",
+                    questions: [
+                        { question: "The number of teeth that a sheep has", answer: "32", value: 200 },
+                        { question: "The name for an adult male sheep", answer: "Ram", value: 400 },
+                        { question: "This word describes a cud-chewing animal such as a sheep", answer: "Ruminant", value: 600 },
+                        { question: "Name two different breeds of sheep", answer: "Merino, Cheviot, Columbia, Cotswold, Leicester, Dorset, Galway…", value: 800 },
+                        { question: "Approximate lifespan of a domestic sheep", answer: "10–12 years", value: 1000 }
+                    ]
+                }
+            ]
+        };
+
+        // Game data for Set 2
+        const set2GameData = {
+            categories: [
+                {
+                    name: "SHEPHERD SONGS & RHYMES",
+                    questions: [
+                        { question: "Classic rhyme: 'Yes sir, yes sir, three bags full!'", answer: "Baa, Baa, Black Sheep", value: 200 },
+                        { question: "Nursery rhyme: girl with a lamb at school", answer: "Mary Had a Little Lamb", value: 400 },
+                        { question: "Hymn inspired by Psalm 23", answer: "The King of Love My Shepherd Is", value: 600 },
+                        { question: "Refrain: 'Shepherd me, O God, beyond my wants, beyond my fears...'", answer: "Shepherd Me, O God", value: 800 },
+                        { question: "Traditional communion hymn", answer: "Shepherd of Souls", value: 1000 }
+                    ]
+                },
+                {
+                    name: "MISCELLANEOUS",
+                    questions: [
+                        { question: "'He will feed His flock and gather the lambs in His arms...'", answer: "Like a Shepherd", value: 200 },
+                        { question: "Psalm 23 in hymn form", answer: "Because the Lord is My Shepherd", value: 400 },
+                        { question: "What state raises the most sheep in the United States?", answer: "Texas", value: 600 },
+                        { question: "What animal provides free weeding and fertilizing services to vineyards in the Loire Valley surrounding Angers, France?", answer: "Sheep", value: 800 },
+                        { question: "Sheep are famous for their wool. What process turns raw wool into yarn?", answer: "Spinning", value: 1000 }
+                    ]
+                },
+                {
+                    name: "CREATION CARE",
+                    questions: [
+                        { question: "The first action of the 2021 newly elected Good Shepherd Congregational Leadership Team was to commit the entire Congregation to LSAP. What do these initials stand for?", answer: "Laudato Si' Action Platform", value: 200 },
+                        { question: "In September 2025, Pope Leo dedicated 135 acres of papal lands in Castel Gandolfo to education in ecology, job training, and immersion experiences in nature. What is the name of this project?", answer: "Laudato Si' Center for Ecology and Creation", value: 400 },
+                        { question: "2025 marks which anniversary of Pope Francis' letter, Laudato Si'?", answer: "10th Anniversary (published 2015)", value: 600 },
+                        { question: "Which Good Shepherd Congregation program encourages sisters and ministries worldwide to take concrete steps toward ecological sustainability and care for creation?", answer: "Good Shepherd Laudato Si' Action Program", value: 800 },
+                        { question: "In 2024–2025, what kind of creation care initiatives have Good Shepherd Sisters undertaken in their communities?", answer: "Examples include tree planting, reforestation, recycling programs, community gardens, and environmental education", value: 1000 }
+                    ]
+                },
+                {
+                    name: "SHEEP & SHEPHERDS",
+                    questions: [
+                        { question: "What is the shape of a sheep's eyeballs?", answer: "Rectangular", value: 200 },
+                        { question: "What does it mean when sheep wag their tails?", answer: "They are happy", value: 400 },
+                        { question: "What breed of sheep has the finest wool?", answer: "Merino", value: 600 },
+                        { question: "How many stomachs does a sheep have?", answer: "Four", value: 800 },
+                        { question: "What is it called when a group of sheep stay together for safety?", answer: "A flock", value: 1000 }
+                    ]
+                },
+                {
+                    name: "HISTORY",
+                    questions: [
+                        { question: "Name of Rose Virginie's favorite teacher at boarding school in Tours", answer: "Mademoiselle Pauline de Lignac", value: 200 },
+                        { question: "To whom did Mary Euphrasia write to request the Generalate?", answer: "Cardinal Odescalchi", value: 400 },
+                        { question: "Second Superior General of Sisters of the Good Shepherd", answer: "Sr. Peter de Coudenhove", value: 600 },
+                        { question: "Who approved the Rule and Constitutions of the Good Shepherd Sisters?", answer: "Pope Gregory XVI", value: 800 },
+                        { question: "Where is St. John Eudes buried?", answer: "In the Eudist church of Notre-Dame de la Roche, Caen, France", value: 1000 }
+                    ]
+                },
+                {
+                    name: "SAINTS TRIVIA",
+                    questions: [
+                        { question: "What is the title of one of St. John Eudes's most famous books about Mary?", answer: "The Admirable Heart of Mary", value: 200 },
+                        { question: "What is the title of St. John Eudes's book on Jesus?", answer: "The Sacred Heart of Jesus", value: 400 },
+                        { question: "How many languages did St. John Eudes speak?", answer: "French, Latin, Greek, German, Italian, and English", value: 600 },
+                        { question: "How many languages could St. Mary Euphrasia speak?", answer: "Three – French, Latin, and Italian", value: 800 },
+                        { question: "Where was St. John Eudes baptized?", answer: "In the parish church of Ri, France", value: 1000 }
+                    ]
+                }
+            ]
+        };
+
+        // Initialize the game
+        function initGame() {
+            console.log('Initializing game...');
+            console.log('Set 1 data:', set1GameData);
+            console.log('Set 2 data:', set2GameData);
+            
+            // Load saved scores
+            loadScores();
+            
+            // Create both game boards
+            console.log('Creating Set 1 game board...');
+            createGameBoard('set1', set1GameData);
+            
+            console.log('Creating Set 2 game board...');
+            createGameBoard('set2', set2GameData);
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Don't auto-play intro music - wait for user interaction
+            
+            // Test: Force show Set 2 for debugging
+            setTimeout(() => {
+                console.log('Testing Set 2 visibility...');
+                const set2Container = document.getElementById('set2Container');
+                const set2GameBoard = document.getElementById('set2GameBoard');
+                console.log('Set 2 container:', set2Container);
+                console.log('Set 2 game board:', set2GameBoard);
+                console.log('Set 2 container children:', set2Container ? set2Container.children.length : 'No container');
+                console.log('Set 2 game board children:', set2GameBoard ? set2GameBoard.children.length : 'No game board');
+            }, 2000);
+            
+            // Try to enter fullscreen
+            setTimeout(() => {
+            if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+            }, 1000);
+        }
+
+        // Create game board
+        function createGameBoard(setId, gameData) {
+            console.log('Creating game board for:', setId);
+            const gameBoard = document.getElementById(setId + 'GameBoard');
+            console.log('Game board element:', gameBoard);
+            
+            if (!gameBoard) {
+                console.error('Game board element not found:', setId + 'GameBoard');
+                return;
+            }
+            
+            gameBoard.innerHTML = '';
+
+            // Add click listener to game board background for myinstants.mp3
+            gameBoard.addEventListener('click', (e) => {
+                // Only play sound if clicking on the background (not on cells or headers)
+                if (e.target === gameBoard) {
+                    console.log('Clicked on game board background - playing myinstants.mp3');
+                    playMyInstantsSound();
+                }
+            });
+
+            // Create category headers
+            gameData.categories.forEach(category => {
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header';
+                categoryHeader.textContent = category.name;
+                categoryHeader.style.cursor = 'pointer';
+                categoryHeader.addEventListener('click', () => {
+                    addCategoryEffects(category.name, categoryHeader);
+                    showCategoryIntro(category.name);
+                });
+                gameBoard.appendChild(categoryHeader);
+            });
+
+            // Create question cells
+            for (let row = 0; row < 5; row++) {
+                gameData.categories.forEach((category, colIndex) => {
+                    const questionCell = document.createElement('div');
+                    questionCell.className = 'question-cell';
+                    questionCell.textContent = category.questions[row].value;
+                    questionCell.dataset.category = colIndex;
+                    questionCell.dataset.question = row;
+                    questionCell.addEventListener('click', () => {
+                        showQuestion(setId, colIndex, row, gameData);
+                    });
+                    gameBoard.appendChild(questionCell);
+                });
+            }
+        }
+
+        // Show question modal
+        function showQuestion(setId, categoryIndex, questionIndex, gameData) {
+            const cell = document.querySelector(`#${setId}GameBoard [data-category="${categoryIndex}"][data-question="${questionIndex}"]`);
+            
+            if (cell.classList.contains('answered')) {
+                return;
+            }
+
+            const category = gameData.categories[categoryIndex];
+            const question = category.questions[questionIndex];
+            
+            currentQuestion = { setId, categoryIndex, questionIndex, category, question };
+            
+            // Update modal content
+            document.getElementById(setId + 'CategoryName').textContent = category.name;
+            document.getElementById(setId + 'PointValue').textContent = `${question.value} Points`;
+            document.getElementById(setId + 'QuestionText').textContent = question.question;
+            document.getElementById(setId + 'QuestionAnswer').textContent = question.answer;
+            document.getElementById(setId + 'QuestionAnswer').style.display = 'none';
+            
+            // Play question-specific audio for Songs & Baseball Teams and Shepherd Songs categories
+            playQuestionAudio(category.name, question);
+            
+            // Add scoring buttons
+            addScoringButtons(setId);
+            
+            // Keep score dock visible when modal is open
+            const scoreDock = document.querySelector('.score-dock');
+            if (scoreDock) {
+                scoreDock.style.display = 'flex';
+                scoreDock.style.visibility = 'visible';
+                scoreDock.style.opacity = '1';
+                scoreDock.style.zIndex = '8000';
+                console.log('Score dock made visible for modal');
+            }
+            
+            // Show modal
+            const modal = document.getElementById(setId + 'QuestionModal');
+            modal.style.display = 'block';
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+            
+            // Mark cell as selected
+            cell.style.backgroundColor = '#FFD700';
+            cell.style.color = '#000';
+            cell.style.transform = 'scale(1.1)';
+            cell.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.8)';
+        }
+
+        // Add scoring buttons to modal
+        function addScoringButtons(setId) {
+            const modalControls = document.querySelector(`#${setId}QuestionModal .modal-controls`);
+            
+            // Remove any existing scoring buttons (Correct/Incorrect buttons)
+            const existingCorrectBtn = document.getElementById(setId + 'CorrectBtn');
+            const existingIncorrectBtn = document.getElementById(setId + 'IncorrectBtn');
+            if (existingCorrectBtn) existingCorrectBtn.remove();
+            if (existingIncorrectBtn) existingIncorrectBtn.remove();
+            
+            // Make sure Show Answer button is visible and reset its state
+            const showAnswerBtn = document.getElementById(setId + 'ShowAnswerBtn');
+            if (showAnswerBtn) {
+                showAnswerBtn.style.display = 'inline-block';
+                showAnswerBtn.textContent = 'Show Answer';
+            }
+            
+            // Hide the answer initially
+            const answerElement = document.getElementById(setId + 'QuestionAnswer');
+            if (answerElement) {
+                answerElement.style.display = 'none';
+            }
+            
+            // Create Correct button (no automatic scoring)
+            const correctBtn = document.createElement('button');
+            correctBtn.className = 'btn btn-success';
+            correctBtn.id = setId + 'CorrectBtn';
+            const correctPoints = currentQuestion ? currentQuestion.question.value : 0;
+            correctBtn.textContent = `Correct (+${correctPoints} Points)`;
+            correctBtn.style.display = 'inline-block';
+            correctBtn.addEventListener('click', () => {
+                // Just close modal - admin will manually score using the score dock
+                playCorrectSound();
+                closeModal(setId);
+            });
+            
+            // Create Incorrect button (no automatic scoring)
+            const incorrectBtn = document.createElement('button');
+            incorrectBtn.className = 'btn btn-danger';
+            incorrectBtn.id = setId + 'IncorrectBtn';
+            const incorrectPoints = currentQuestion ? currentQuestion.question.value : 0;
+            incorrectBtn.textContent = `Incorrect (-${incorrectPoints} Points)`;
+            incorrectBtn.style.display = 'inline-block';
+            incorrectBtn.addEventListener('click', () => {
+                // Play incorrect sound but keep modal open for other players to try
+                console.log('Incorrect button clicked!');
+                playIncorrectSound();
+                // Don't close modal - let other players continue answering
+            });
+            
+            // Add buttons to modal
+            modalControls.appendChild(correctBtn);
+            modalControls.appendChild(incorrectBtn);
+        }
+
+        // Close modal
+        function closeModal(setId) {
+            console.log('closeModal called with setId:', setId);
+            const modal = document.getElementById(setId + 'QuestionModal');
+            console.log('Modal element:', modal);
+            if (modal) {
+                modal.style.display = 'none';
+                console.log('Modal hidden');
+            }
+            
+            // Stop any currently playing audio when modal is closed
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+                console.log('Audio stopped when modal closed');
+            }
+            
+            // Show score dock again when modal is closed
+            const scoreDock = document.querySelector('.score-dock');
+            if (scoreDock) {
+                scoreDock.style.display = 'flex';
+                console.log('Score dock shown');
+            }
+            
+            if (currentQuestion) {
+                console.log('Current question exists, marking as answered');
+                const cell = document.querySelector(`#${setId}GameBoard [data-category="${currentQuestion.categoryIndex}"][data-question="${currentQuestion.questionIndex}"]`);
+                console.log('Cell element:', cell);
+                if (cell) {
+                    cell.classList.add('answered');
+                    
+                    // Make cell completely transparent so only the background image shows
+                    cell.style.backgroundColor = 'transparent';
+                    cell.style.background = 'none';
+                    cell.style.color = 'transparent';
+                    cell.style.textShadow = 'none';
+                    cell.style.cursor = 'not-allowed';
+                    cell.style.border = '3px solid #fbbf24';
+                    cell.style.boxShadow = 'none';
+                    console.log('Cell marked as answered');
+                    
+                    // Track answered question
+                    const questionId = `${currentQuestion.categoryIndex}-${currentQuestion.questionIndex}`;
+                    answeredQuestions[setId].add(questionId);
+                    console.log('Answered questions for', setId, ':', answeredQuestions[setId].size);
+                    
+                    // Check if all questions are answered
+                    checkGameCompletion(setId);
+                }
+            } else {
+                console.log('No current question to mark as answered');
+            }
+        }
+
+        // Show answer
+        function showAnswer(setId) {
+            document.getElementById(setId + 'QuestionAnswer').style.display = 'block';
+            document.getElementById(setId + 'ShowAnswerBtn').style.display = 'none';
+        }
+
+        // Check if all questions in a set are answered
+        function checkGameCompletion(setId) {
+            const totalQuestions = 30; // 6 categories × 5 questions each
+            const answeredCount = answeredQuestions[setId].size;
+            
+            console.log(`Game completion check for ${setId}: ${answeredCount}/${totalQuestions} questions answered`);
+            
+            if (answeredCount >= totalQuestions) {
+                console.log(`🎉 All questions answered in ${setId}! Showing full photo.`);
+                showFullPhoto(setId);
+            }
+        }
+
+        // Show full group photo after game completion
+        function showFullPhoto(setId) {
+            // Create full photo overlay
+            const fullPhotoOverlay = document.createElement('div');
+            fullPhotoOverlay.id = 'fullPhotoOverlay';
+            fullPhotoOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: url('${setId === 'set1' ? 'assembly2024.jpg' : 'coreValue.jpg'}') center/cover no-repeat;
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                animation: fadeIn 2s ease-in;
+            `;
+
+            // Add celebration text
+            const celebrationText = document.createElement('div');
+            celebrationText.style.cssText = `
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 30px 60px;
+                border-radius: 20px;
+                font-size: 3rem;
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 30px;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+                animation: slideInFromTop 1s ease-out 0.5s both;
+            `;
+            celebrationText.textContent = '🎉 GAME COMPLETE! 🎉';
+
+            // Add final scores
+            const finalScores = document.createElement('div');
+            finalScores.style.cssText = `
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 20px 40px;
+                border-radius: 15px;
+                font-size: 1.5rem;
+                text-align: center;
+                animation: slideInFromBottom 1s ease-out 1s both;
+            `;
+            
+            // Get current scores
+            const team1Score = parseInt(document.getElementById('set1Team1Score').textContent) || 0;
+            const team2Score = parseInt(document.getElementById('set1Team2Score').textContent) || 0;
+            const team3Score = parseInt(document.getElementById('set1Team3Score').textContent) || 0;
+            
+            finalScores.innerHTML = `
+                <div style="font-size: 2rem; margin-bottom: 15px; font-weight: bold;">FINAL SCORES</div>
+                <div>TEAM AA: ${team1Score} Points</div>
+                <div>AAA: ${team2Score} Points</div>
+                <div>ZEAL: ${team3Score} Points</div>
+            `;
+
+            // Add close button
+            const closeButton = document.createElement('button');
+            closeButton.style.cssText = `
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                border: 2px solid white;
+                padding: 15px 30px;
+                border-radius: 10px;
+                font-size: 1.2rem;
+                cursor: pointer;
+                margin-top: 30px;
+                transition: all 0.3s ease;
+                animation: slideInFromBottom 1s ease-out 1.5s both;
+            `;
+            closeButton.textContent = 'Close';
+            closeButton.addEventListener('click', () => {
+                fullPhotoOverlay.remove();
+            });
+            closeButton.addEventListener('mouseenter', () => {
+                closeButton.style.background = 'rgba(255, 255, 255, 0.3)';
+            });
+            closeButton.addEventListener('mouseleave', () => {
+                closeButton.style.background = 'rgba(255, 255, 255, 0.2)';
+            });
+
+            // Add CSS animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideInFromTop {
+                    from { 
+                        opacity: 0; 
+                        transform: translateY(-50px); 
+                    }
+                    to { 
+                        opacity: 1; 
+                        transform: translateY(0); 
+                    }
+                }
+                @keyframes slideInFromBottom {
+                    from { 
+                        opacity: 0; 
+                        transform: translateY(50px); 
+                    }
+                    to { 
+                        opacity: 1; 
+                        transform: translateY(0); 
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Assemble and show
+            fullPhotoOverlay.appendChild(celebrationText);
+            fullPhotoOverlay.appendChild(finalScores);
+            fullPhotoOverlay.appendChild(closeButton);
+            document.body.appendChild(fullPhotoOverlay);
+
+            // Play celebration sound if available
+            try {
+                const celebrationAudio = new Audio('jeopardy-theme-main-part-only.mp3');
+                celebrationAudio.volume = 0.6;
+                celebrationAudio.play().catch(e => console.log('Celebration audio failed:', e));
+            } catch (e) {
+                console.log('Error playing celebration audio:', e);
+            }
+        }
+
+        // Category effects
+        function addCategoryEffects(categoryName, element) {
+            console.log('Adding category effects for:', categoryName);
+            
+            // Remove any existing effects
+            element.classList.remove('category-effect-provinces', 'category-effect-dates', 'category-effect-quotes', 
+                                'category-effect-scripture', 'category-effect-songs', 'category-effect-sheep', 'category-effect-default');
+            
+            // Add category-specific effects
+            switch(categoryName.toLowerCase()) {
+                case 'provinces':
+                case 'miscellaneous':
+                    element.classList.add('category-effect-provinces');
+                    playCategorySound('provinces');
+                    break;
+                case 'dates':
+                case 'creation care':
+                    element.classList.add('category-effect-dates');
+                    playCategorySound('dates');
+                    break;
+                case 'foundress\'s quotations':
+                case 'history':
+                    element.classList.add('category-effect-quotes');
+                    playCategorySound('quotes');
+                    break;
+                case 'scripture':
+                case 'sheep & shepherds':
+                    element.classList.add('category-effect-scripture');
+                    playCategorySound('scripture');
+                    break;
+                case 'songs & baseball teams':
+                    element.classList.add('category-effect-songs');
+                    playCategorySound('songs');
+                    break;
+                case 'sheep':
+                case 'shepherd songs & rhymes':
+                    element.classList.add('category-effect-sheep');
+                    playCategorySound('sheep');
+                    break;
+                case 'saints trivia':
+                    element.classList.add('category-effect-default');
+                    playCategorySound('default');
+                    break;
+                default:
+                    element.classList.add('category-effect-default');
+                    playCategorySound('default');
+            }
+            
+            // Remove effect class after animation
+            setTimeout(() => {
+                element.classList.remove('category-effect-provinces', 'category-effect-dates', 'category-effect-quotes', 
+                                        'category-effect-scripture', 'category-effect-songs', 'category-effect-sheep', 'category-effect-default');
+            }, 3000);
+        }
+
+        // Play main intro music (only on main page, once per click)
+        function playMainIntroMusic() {
+            console.log('playMainIntroMusic called, audioEnabled:', audioEnabled, 'introMusicStarted:', introMusicStarted);
+            
+            if (!audioEnabled) {
+                console.log('Audio is disabled');
+                return;
+            }
+            
+            if (introMusicStarted) {
+                console.log('Intro music already started, skipping');
+                return;
+            }
+            
+            try {
+                introMusicAudio = new Audio('jeopardy-theme-main-part-only.mp3');
+                introMusicAudio.volume = 0.4;
+                introMusicAudio.loop = false; // Play only once, don't loop
+                console.log('Attempting to play main intro music (once)...');
+                introMusicAudio.play().then(() => {
+                    console.log('Main intro music started successfully (playing once)');
+                    introMusicStarted = true;
+                }).catch(e => {
+                    console.log('Main intro music playback failed:', e);
+                    console.log('This might be due to browser autoplay policy - user interaction required');
+                });
+            } catch (e) {
+                console.log('Error creating main intro music:', e);
+            }
+        }
+
+        // Stop main intro music
+        function stopMainIntroMusic() {
+            console.log('stopMainIntroMusic called');
+            if (introMusicAudio) {
+                introMusicAudio.pause();
+                introMusicAudio.currentTime = 0;
+                introMusicStarted = false;
+                console.log('Main intro music stopped and reset for next play');
+            }
+        }
+
+        // Play category sounds
+        function playCategorySound(category) {
+            if (!audioEnabled) return;
+            
+            try {
+                let audioFile;
+                switch(category) {
+                    case 'provinces':
+                        audioFile = 'myinstants.mp3';
+                        break;
+                    case 'dates':
+                        audioFile = 'myinstants.mp3';
+                        break;
+                    case 'quotes':
+                        audioFile = 'myinstants.mp3';
+                        break;
+                    case 'scripture':
+                        audioFile = 'myinstants.mp3';
+                        break;
+                    case 'songs':
+                        audioFile = 'myinstants.mp3';
+                        break;
+                    case 'sheep':
+                        audioFile = 'myinstants.mp3';
+                        break;
+                    default:
+                        audioFile = 'myinstants.mp3';
+                }
+                
+                const audio = new Audio(audioFile);
+                audio.volume = 0.6;
+                audio.play().catch(e => {
+                    console.log('Category sound playback failed:', e);
+                });
+            } catch (e) {
+                console.log('Error playing category sound:', e);
+            }
+        }
+
+        // Play myinstants.mp3 sound
+        function playMyInstantsSound() {
+            if (!audioEnabled) return;
+            
+            try {
+                const audio = new Audio('myinstants.mp3');
+                audio.volume = 0.6;
+                audio.play().catch(e => {
+                    console.log('Myinstants sound playback failed:', e);
+                });
+            } catch (e) {
+                console.log('Error playing myinstants sound:', e);
+            }
+        }
+
+        // Play myinstants sound for game events
+        function playGameSound() {
+            if (!audioEnabled) {
+                console.log('Audio is disabled, skipping game sound');
+                return;
+            }
+            
+            try {
+                const audio = new Audio('myinstants.mp3');
+                audio.volume = 0.6; // Increased volume for Set button clicks
+                console.log('Playing game sound (myinstants.mp3) with volume:', audio.volume);
+                audio.play().then(() => {
+                    console.log('Game sound played successfully');
+                }).catch(e => {
+                    console.log('Game sound playback failed:', e);
+                });
+            } catch (e) {
+                console.log('Error playing game sound:', e);
+            }
+        }
+
+        // Show category intro
+        function showCategoryIntro(title) {
+            const intro = document.getElementById('categoryIntro');
+            const titleElement = document.getElementById('categoryIntroTitle');
+            titleElement.textContent = title;
+            
+            // Set different background based on current set
+            if (currentSet === 'set1') {
+                intro.style.background = "url('assembly2024.jpg') center/cover no-repeat fixed";
+            } else {
+                intro.style.background = "url('coreValue.jpg') center/cover no-repeat fixed";
+            }
+            
+            intro.style.display = 'flex';
+            
+            setTimeout(() => {
+                intro.style.display = 'none';
+            }, 3000);
+        }
+
+        // Score management
+        let scores = { team1: 0, team2: 0, team3: 0 };
+        let teamNames = { team1: 'Team 1', team2: 'Team 2', team3: 'Team 3' };
+
+        function addPoints(points) {
+            scores.team1 += points;
+            updateScoreDisplay();
+            saveScores();
+        }
+
+        function subtractPoints(points) {
+            scores.team1 -= points;
+            updateScoreDisplay();
+            saveScores();
+        }
+
+        // Global functions for score dock buttons
+        function addPointsTo(team, points) {
+            scores[`team${team}`] += points;
+            updateScoreDisplay();
+            saveScores();
+        }
+
+        function subtractPointsFrom(team, points) {
+            scores[`team${team}`] -= points;
+            updateScoreDisplay();
+            saveScores();
+        }
+
+        function updateScoreDisplay() {
+            // Ensure scores are numbers, not undefined
+            const team1Score = scores.team1 || 0;
+            const team2Score = scores.team2 || 0;
+            const team3Score = scores.team3 || 0;
+            
+            // Update tracker overlay
+            const tracker1 = document.getElementById('trackerTeam1Score');
+            const tracker2 = document.getElementById('trackerTeam2Score');
+            const tracker3 = document.getElementById('trackerTeam3Score');
+            
+            if (tracker1) tracker1.textContent = `${team1Score} Points`;
+            if (tracker2) tracker2.textContent = `${team2Score} Points`;
+            if (tracker3) tracker3.textContent = `${team3Score} Points`;
+            
+            // Update score docks for both sets
+            const set1Team1 = document.getElementById('set1Team1Score');
+            const set1Team2 = document.getElementById('set1Team2Score');
+            const set1Team3 = document.getElementById('set1Team3Score');
+            
+            if (set1Team1) set1Team1.textContent = `${team1Score} Points`;
+            if (set1Team2) set1Team2.textContent = `${team2Score} Points`;
+            if (set1Team3) set1Team3.textContent = `${team3Score} Points`;
+            
+            const set2Team1 = document.getElementById('set2Team1Score');
+            const set2Team2 = document.getElementById('set2Team2Score');
+            const set2Team3 = document.getElementById('set2Team3Score');
+            
+            if (set2Team1) set2Team1.textContent = `${team1Score} Points`;
+            if (set2Team2) set2Team2.textContent = `${team2Score} Points`;
+            if (set2Team3) set2Team3.textContent = `${team3Score} Points`;
+        }
+
+        function saveScores() {
+            localStorage.setItem('shepherdyScores', JSON.stringify(scores));
+            localStorage.setItem('shepherdyTeamNames', JSON.stringify(teamNames));
+        }
+
+        function loadScores() {
+            const savedScores = localStorage.getItem('shepherdyScores');
+            const savedNames = localStorage.getItem('shepherdyTeamNames');
+            
+            if (savedScores) {
+                try {
+                    scores = JSON.parse(savedScores);
+                } catch (e) {
+                    console.log('Error parsing saved scores, using defaults');
+                    scores = { team1: 0, team2: 0, team3: 0 };
+                }
+            } else {
+                scores = { team1: 0, team2: 0, team3: 0 };
+            }
+            
+            if (savedNames) {
+                try {
+                    teamNames = JSON.parse(savedNames);
+                } catch (e) {
+                    console.log('Error parsing saved names, using defaults');
+                    teamNames = { team1: 'Team 1', team2: 'Team 2', team3: 'Team 3' };
+                }
+            } else {
+                teamNames = { team1: 'Team 1', team2: 'Team 2', team3: 'Team 3' };
+            }
+            
+            // Ensure all scores are numbers
+            scores.team1 = Number(scores.team1) || 0;
+            scores.team2 = Number(scores.team2) || 0;
+            scores.team3 = Number(scores.team3) || 0;
+            
+            updateScoreDisplay();
+            updateTeamNames();
+        }
+
+        function updateTeamNames() {
+            // Update tracker overlay
+            document.getElementById('trackerTeam1Name').textContent = teamNames.team1;
+            document.getElementById('trackerTeam2Name').textContent = teamNames.team2;
+            document.getElementById('trackerTeam3Name').textContent = teamNames.team3;
+            
+            // Update score docks for both sets
+            document.getElementById('set1Team1Name').textContent = teamNames.team1;
+            document.getElementById('set1Team2Name').textContent = teamNames.team2;
+            document.getElementById('set1Team3Name').textContent = teamNames.team3;
+            
+            document.getElementById('set2Team1Name').textContent = teamNames.team1;
+            document.getElementById('set2Team2Name').textContent = teamNames.team2;
+            document.getElementById('set2Team3Name').textContent = teamNames.team3;
+        }
+
+        // Tracker functions
+        function trackerAddPoints(team, points) {
+            scores[`team${team}`] += points;
+            updateScoreDisplay();
+            saveScores();
+        }
+
+        function trackerSubtractPoints(team, points) {
+            scores[`team${team}`] -= points;
+            updateScoreDisplay();
+            saveScores();
+        }
+
+        function showTracker() {
+            document.getElementById('trackerOverlay').style.display = 'flex';
+        }
+
+        function closeTracker() {
+            document.getElementById('trackerOverlay').style.display = 'none';
+        }
+
+        function resetScores() {
+            if (confirm('Are you sure you want to reset all scores to 0 Points?')) {
+                scores = { team1: 0, team2: 0, team3: 0 };
+                teamNames = { team1: 'Team 1', team2: 'Team 2', team3: 'Team 3' };
+                updateScoreDisplay();
+                updateTeamNames();
+                saveScores();
+            }
+        }
+
+        // Play sound specifically for Set button clicks
+        function playSetButtonSound() {
+            if (!audioEnabled) {
+                console.log('Audio is disabled, skipping Set button sound');
+                return;
+            }
+            
+            try {
+                const audio = new Audio('myinstants.mp3');
+                audio.volume = 0.8; // Higher volume for Set button clicks
+                console.log('Playing Set button sound (myinstants.mp3) with volume:', audio.volume);
+                audio.play().then(() => {
+                    console.log('Set button sound played successfully');
+                }).catch(e => {
+                    console.log('Set button sound playback failed:', e);
+                });
+            } catch (e) {
+                console.log('Error playing Set button sound:', e);
+            }
+        }
+
+        // Game navigation
+        function startGame(set) {
+            console.log('Starting game with set:', set);
+            console.log('Presentation mode active:', document.body.classList.contains('presentation-mode'));
+            currentSet = set;
+            
+            // Stop intro music when starting a game
+            stopMainIntroMusic();
+            
+            // Play Set button sound
+            playSetButtonSound();
+            document.getElementById('mainIntro').classList.add('hidden');
+            document.getElementById('setSwitcher').style.display = 'flex';
+            
+            const container = document.getElementById(set + 'Container');
+            console.log('Container element:', container);
+            if (container) {
+                container.classList.add('active');
+                console.log('Added active class to:', set + 'Container');
+                console.log('Container classes after adding active:', container.className);
+                console.log('Container computed display:', window.getComputedStyle(container).display);
+                
+                // Only set inline styles if not in presentation mode
+                if (!document.body.classList.contains('presentation-mode')) {
+                    container.style.display = 'flex';
+                    container.style.visibility = 'visible';
+                    container.style.opacity = '1';
+                    console.log('Set inline styles (not in presentation mode)');
+                } else {
+                    console.log('In presentation mode - relying on CSS for display');
+                }
+            } else {
+                console.error('Container not found:', set + 'Container');
+            }
+            
+            // Ensure score dock is visible
+            ensureScoreDockVisible();
+            
+            updateSetSwitcher();
+        }
+
+        function switchToSet(set) {
+            console.log('Switching to set:', set);
+            console.log('Current set:', currentSet);
+            console.log('Presentation mode active:', document.body.classList.contains('presentation-mode'));
+            
+            // Stop intro music when switching sets (if it's playing)
+            stopMainIntroMusic();
+            
+            playGameSound(); // Play myinstants.mp3 when switching sets
+            
+            // Hide current set
+            const currentContainer = document.getElementById(currentSet + 'Container');
+            if (currentContainer) {
+                currentContainer.classList.remove('active');
+                console.log('Removed active class from:', currentSet + 'Container');
+                console.log('Current container classes after removal:', currentContainer.className);
+                
+                // Only set inline styles if not in presentation mode
+                if (!document.body.classList.contains('presentation-mode')) {
+                    currentContainer.style.display = 'none';
+                    console.log('Set inline display:none (not in presentation mode)');
+                } else {
+                    console.log('In presentation mode - relying on CSS for hiding');
+                }
+            }
+            
+            // Show new set
+            currentSet = set;
+            const newContainer = document.getElementById(set + 'Container');
+            if (newContainer) {
+                newContainer.classList.add('active');
+                console.log('Added active class to:', set + 'Container');
+                console.log('New container classes after adding active:', newContainer.className);
+                console.log('New container computed display:', window.getComputedStyle(newContainer).display);
+                
+                // Only set inline styles if not in presentation mode
+                if (!document.body.classList.contains('presentation-mode')) {
+                    newContainer.style.display = 'flex';
+                    newContainer.style.visibility = 'visible';
+                    newContainer.style.opacity = '1';
+                    newContainer.style.zIndex = '10';
+                    console.log('Set inline styles (not in presentation mode)');
+                } else {
+                    console.log('In presentation mode - relying on CSS for display');
+                }
+                
+                // Make sure game board is visible
+                const gameBoard = document.getElementById(set + 'GameBoard');
+                if (gameBoard) {
+                    // Only set inline styles if not in presentation mode
+                    if (!document.body.classList.contains('presentation-mode')) {
+                        gameBoard.style.display = 'grid';
+                        gameBoard.style.visibility = 'visible';
+                        gameBoard.style.opacity = '1';
+                    }
+                    
+                    // Check if game board is empty and recreate if needed
+                    if (gameBoard.children.length === 0) {
+                        console.log('Game board is empty, recreating...');
+                        const gameData = set === 'set1' ? set1GameData : set2GameData;
+                        createGameBoard(set, gameData);
+                    }
+                }
+            } else {
+                console.error('Container not found:', set + 'Container');
+            }
+            
+            updateSetSwitcher();
+        }
+
+        function showMainIntro() {
+            document.getElementById('mainIntro').classList.remove('hidden');
+            document.getElementById('setSwitcher').style.display = 'none';
+            document.getElementById(currentSet + 'Container').classList.remove('active');
+            
+            // Reset intro music flag so it can play again when returning to main page
+            introMusicStarted = false;
+            
+            // Restart intro music when returning to main page
+            playMainIntroMusic();
+        }
+
+        function updateSetSwitcher() {
+            document.getElementById('set1Switch').classList.toggle('active', currentSet === 'set1');
+            document.getElementById('set2Switch').classList.toggle('active', currentSet === 'set2');
+        }
+
+        function testSet2() {
+            console.log('Testing Set 2...');
+            
+            // Hide main intro
+            document.getElementById('mainIntro').classList.add('hidden');
+            document.getElementById('setSwitcher').style.display = 'flex';
+            
+            // Hide Set 1
+            const set1Container = document.getElementById('set1Container');
+            if (set1Container) {
+                set1Container.classList.remove('active');
+                console.log('Hidden Set 1');
+            }
+            
+            // Show Set 2
+            const set2Container = document.getElementById('set2Container');
+            if (set2Container) {
+                set2Container.classList.add('active');
+                console.log('Shown Set 2');
+                currentSet = 'set2';
+            } else {
+                console.error('Set 2 container not found!');
+            }
+            
+            // Check Set 2 game board
+            const set2GameBoard = document.getElementById('set2GameBoard');
+            if (set2GameBoard) {
+                console.log('Set 2 game board found, children:', set2GameBoard.children.length);
+                if (set2GameBoard.children.length === 0) {
+                    console.log('Set 2 game board is empty, recreating...');
+                    createGameBoard('set2', set2GameData);
+                }
+            } else {
+                console.error('Set 2 game board not found!');
+            }
+            
+            updateSetSwitcher();
+        }
+
+        function forceRefresh() {
+            console.log('Force refreshing game data...');
+            
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Recreate both game boards
+            createGameBoard('set1', set1GameData);
+            createGameBoard('set2', set2GameData);
+            
+            // Reset scores
+            scores = { team1: 0, team2: 0, team3: 0 };
+            teamNames = { team1: 'Team 1', team2: 'Team 2', team3: 'Team 3' };
+            updateScoreDisplay();
+            updateTeamNames();
+            
+            console.log('Game data refreshed!');
+        }
+
+        function debugGame() {
+            console.log('=== DEBUG GAME ===');
+            console.log('Current set:', currentSet);
+            console.log('Set 1 data exists:', !!set1GameData);
+            console.log('Set 2 data exists:', !!set2GameData);
+            console.log('Set 1 categories:', set1GameData ? set1GameData.categories.length : 'No data');
+            console.log('Set 2 categories:', set2GameData ? set2GameData.categories.length : 'No data');
+            
+            // Check HTML elements
+            const set1Container = document.getElementById('set1Container');
+            const set2Container = document.getElementById('set2Container');
+            const set1GameBoard = document.getElementById('set1GameBoard');
+            const set2GameBoard = document.getElementById('set2GameBoard');
+            
+            console.log('Set 1 container:', !!set1Container);
+            console.log('Set 2 container:', !!set2Container);
+            console.log('Set 1 game board:', !!set1GameBoard);
+            console.log('Set 2 game board:', !!set2GameBoard);
+            
+            if (set1GameBoard) {
+                console.log('Set 1 game board children:', set1GameBoard.children.length);
+            }
+            if (set2GameBoard) {
+                console.log('Set 2 game board children:', set2GameBoard.children.length);
+            }
+            
+            // Try to recreate game boards
+            console.log('Recreating game boards...');
+            try {
+                createGameBoard('set1', set1GameData);
+                createGameBoard('set2', set2GameData);
+                console.log('Game boards recreated successfully');
+            } catch (error) {
+                console.error('Error recreating game boards:', error);
+            }
+            
+            alert('Debug complete! Check console for details.');
+        }
+
+        function forceShowSet2() {
+            console.log('=== FORCE SHOW SET 2 ===');
+            
+            // Hide main intro
+            document.getElementById('mainIntro').classList.add('hidden');
+            document.getElementById('setSwitcher').style.display = 'flex';
+            
+            // Hide Set 1
+            const set1Container = document.getElementById('set1Container');
+            if (set1Container) {
+                set1Container.classList.remove('active');
+                set1Container.style.display = 'none';
+                console.log('Hidden Set 1');
+            }
+            
+            // Force show Set 2
+            const set2Container = document.getElementById('set2Container');
+            if (set2Container) {
+                set2Container.classList.add('active');
+                set2Container.style.display = 'flex';
+                set2Container.style.visibility = 'visible';
+                set2Container.style.opacity = '1';
+                set2Container.style.zIndex = '10';
+                console.log('Force shown Set 2');
+                currentSet = 'set2';
+            } else {
+                console.error('Set 2 container not found!');
+                return;
+            }
+            
+            // Check and recreate Set 2 game board
+            const set2GameBoard = document.getElementById('set2GameBoard');
+            if (set2GameBoard) {
+                console.log('Set 2 game board found, children:', set2GameBoard.children.length);
+                if (set2GameBoard.children.length === 0) {
+                    console.log('Set 2 game board is empty, recreating...');
+                    createGameBoard('set2', set2GameData);
+                }
+                
+                // Make sure game board is visible
+                set2GameBoard.style.display = 'grid';
+                set2GameBoard.style.visibility = 'visible';
+                set2GameBoard.style.opacity = '1';
+            } else {
+                console.error('Set 2 game board not found!');
+            }
+            
+            // Ensure score dock is visible
+            ensureScoreDockVisible();
+            
+            updateSetSwitcher();
+            console.log('Set 2 should now be visible!');
+        }
+
+        function ensureScoreDockVisible() {
+            const scoreDock = document.querySelector('.score-dock');
+            if (scoreDock) {
+                scoreDock.style.display = 'flex';
+                scoreDock.style.visibility = 'visible';
+                scoreDock.style.opacity = '1';
+                scoreDock.style.zIndex = '5000';
+                console.log('Score dock made visible');
+            } else {
+                console.error('Score dock not found!');
+            }
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Set 1 modal events
+            document.getElementById('set1ShowAnswerBtn').addEventListener('click', () => {
+                showAnswer('set1');
+            });
+            document.getElementById('set1CloseModalBtn').addEventListener('click', () => closeModal('set1'));
+            
+            // Set 2 modal events
+            document.getElementById('set2ShowAnswerBtn').addEventListener('click', () => {
+                showAnswer('set2');
+            });
+            document.getElementById('set2CloseModalBtn').addEventListener('click', () => closeModal('set2'));
+            
+            // Team name editing events
+            setupTeamNameEditing();
+            
+            // Start intro music on first user interaction
+            function startIntroMusicOnInteraction() {
+                if (!introMusicStarted) {
+                    console.log('User interaction detected - starting intro music');
+                    playMainIntroMusic();
+                    // Remove the event listener after first interaction
+                    document.removeEventListener('click', startIntroMusicOnInteraction);
+                    document.removeEventListener('keydown', startIntroMusicOnInteraction);
+                }
+            }
+            
+            // Add click and keydown listeners to start music
+            document.addEventListener('click', startIntroMusicOnInteraction);
+            document.addEventListener('keydown', startIntroMusicOnInteraction);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal(currentSet);
+                    closeTracker();
+                }
+                if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                    showcaseAllCategories();
+                }
+                if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                    showTracker();
+                }
+            });
+        }
+
+        function setupTeamNameEditing() {
+            // Set up team name editing for all team name elements
+            const teamNameElements = [
+                'set1Team1Name', 'set1Team2Name', 'set1Team3Name',
+                'set2Team1Name', 'set2Team2Name', 'set2Team3Name',
+                'trackerTeam1Name', 'trackerTeam2Name', 'trackerTeam3Name'
+            ];
+            
+            teamNameElements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.addEventListener('blur', () => {
+                        const teamNumber = elementId.includes('Team1') ? 1 : 
+                                          elementId.includes('Team2') ? 2 : 3;
+                        teamNames[`team${teamNumber}`] = element.textContent;
+                        saveScores();
+                        updateTeamNames();
+                    });
+                    
+                    element.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            element.blur();
+                        }
+                    });
+                }
+            });
+        }
+
+        // Showcase all categories
+        function showcaseAllCategories() {
+            console.log('Starting category showcase...');
+            
+            const categoryHeaders = document.querySelectorAll(`#${currentSet}GameBoard .category-header`);
+            const categoryNames = currentSet === 'set1' ? 
+                ['provinces', 'dates', 'quotes', 'scripture', 'songs', 'sheep'] :
+                ['provinces', 'dates', 'quotes', 'scripture', 'songs', 'sheep'];
+            
+            categoryHeaders.forEach((header, index) => {
+                setTimeout(() => {
+                    const categoryName = categoryNames[index] || 'default';
+                    addCategoryEffects(categoryName, header);
+                    
+                    // Add a special showcase glow
+                    header.style.boxShadow = `
+                        0 0 80px rgba(251, 191, 36, 0.8),
+                        0 0 120px rgba(251, 191, 36, 0.6),
+                        0 0 160px rgba(251, 191, 36, 0.4),
+                        inset 0 0 30px rgba(255, 255, 255, 0.4)
+                    `;
+                    
+                    // Remove showcase glow after animation
+                    setTimeout(() => {
+                        header.style.boxShadow = '';
+                    }, 3000);
+                    
+                }, index * 500);
+            });
+            
+            // Play showcase sound
+            setTimeout(() => {
+                if (audioEnabled) {
+                    try {
+                        const audio = new Audio('myinstants.mp3');
+                        audio.volume = 0.8;
+                        audio.play().catch(e => console.log('Showcase audio failed:', e));
+                    } catch (e) {
+                        console.log('Error playing showcase audio:', e);
+                    }
+                }
+            }, 1000);
+        }
+
+        // Audio functions
+        function playCorrectSound() {
+            if (!audioEnabled) return;
+            try {
+                const audio = new Audio('rightanswer.mp3');
+                audio.volume = 0.7;
+                audio.play().catch(e => console.log('Correct sound failed:', e));
+            } catch (e) {
+                console.log('Error playing correct sound:', e);
+            }
+        }
+
+        function playIncorrectSound() {
+            console.log('playIncorrectSound called, audioEnabled:', audioEnabled);
+            if (!audioEnabled) return;
+            try {
+                const audio = new Audio('times-up.mp3');
+                audio.volume = 0.7;
+                audio.play().then(() => {
+                    console.log('Incorrect sound played successfully');
+                }).catch(e => console.log('Incorrect sound failed:', e));
+            } catch (e) {
+                console.log('Error playing incorrect sound:', e);
+            }
+        }
+
+        // Play question-specific audio for Songs & Baseball Teams and Shepherd Songs categories
+        function playQuestionAudio(categoryName, question) {
+            if (!audioEnabled) return;
+            
+            try {
+                let audioFile = null;
+                
+                // Songs & Baseball Teams category
+                if (categoryName === 'SONGS & BASEBALL TEAMS') {
+                    switch(question.value) {
+                        case 200: // San Francisco Giants
+                            audioFile = 'I Left My Heart in San Francisco.mp3';
+                            break;
+                        case 400: // Yankees and Mets
+                            audioFile = 'Theme From New York, New York (2008 Remastered).mp3';
+                            break;
+                        case 600: // Boston Red Sox
+                            audioFile = 'Please Come To Boston.mp3';
+                            break;
+                        case 800: // Chicago Cubs and White Sox
+                            audioFile = 'My Kind Of Town (2008 Remastered).mp3';
+                            break;
+                        case 1000: // St. Louis Cardinals
+                            audioFile = 'Judy Garland - Meet Me in St. Louis.mp3';
+                            break;
+                    }
+                }
+                // Shepherd Songs & Rhymes category
+                else if (categoryName === 'SHEPHERD SONGS & RHYMES') {
+                    switch(question.value) {
+                        case 200: // Baa, Baa, Black Sheep
+                            audioFile = 'baa-baa-black-sheep.mp3';
+                            break;
+                        case 400: // Mary Had a Little Lamb
+                            audioFile = 'mary-had-little-lamb.mp3';
+                            break;
+                        case 600: // The King of Love My Shepherd Is
+                            audioFile = 'The King Of Love My Shepherd Is | Christian Hymn | Psalm 23 | Choir with Lyrics | Sunday 7pm Choir.mp3';
+                            break;
+                        case 800: // Shepherd Me, O God
+                            audioFile = 'shepherd-me-o-god.mp3';
+                            break;
+                        case 1000: // Shepherd of Souls
+                            audioFile = 'Shepherd of Souls.mp3';
+                            break;
+                    }
+                }
+                
+                // Play the audio if we found a matching file
+                if (audioFile) {
+                    // Stop any currently playing audio
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio = null;
+                    }
+                    
+                    // Create and play new audio
+                    currentAudio = new Audio(audioFile);
+                    currentAudio.volume = 0.5; // Lower volume for question audio
+                    currentAudio.play().catch(e => {
+                        console.log('Question audio playback failed:', e);
+                    });
+                    
+                    // Clear reference when audio ends naturally
+                    currentAudio.addEventListener('ended', () => {
+                        currentAudio = null;
+                    });
+                }
+            } catch (e) {
+                console.log('Error playing question audio:', e);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Starting initialization...');
+            try {
+                initGame();
+                console.log('Game initialization completed successfully');
+            } catch (error) {
+                console.error('Error during game initialization:', error);
+                alert('Error loading game: ' + error.message);
+            }
+        });
+
+        // Also try to initialize immediately
+        console.log('Script loaded, attempting immediate initialization...');
+        try {
+            if (document.readyState === 'loading') {
+                console.log('Document still loading, waiting for DOMContentLoaded...');
+            } else {
+                console.log('Document already loaded, initializing immediately...');
+                initGame();
+            }
+        } catch (error) {
+            console.error('Error during immediate initialization:', error);
+        }
+
+        // Debug function for presentation mode
+        function debugPresentationMode() {
+            console.log('=== PRESENTATION MODE DEBUG ===');
+            console.log('Body classes:', document.body.className);
+            console.log('Body has presentation-mode class:', document.body.classList.contains('presentation-mode'));
+            console.log('Main intro element:', document.getElementById('mainIntro'));
+            console.log('Main intro classes:', document.getElementById('mainIntro')?.className);
+            console.log('Set switcher element:', document.getElementById('setSwitcher'));
+            console.log('Set switcher display:', document.getElementById('setSwitcher')?.style.display);
+            console.log('Set 1 container:', document.getElementById('set1Container'));
+            console.log('Set 1 container classes:', document.getElementById('set1Container')?.className);
+            console.log('Set 2 container:', document.getElementById('set2Container'));
+            console.log('Set 2 container classes:', document.getElementById('set2Container')?.className);
+            console.log('Current set:', currentSet);
+            console.log('Score dock element:', document.querySelector('.score-dock'));
+            console.log('Score dock display:', document.querySelector('.score-dock')?.style.display);
+        }
+
+        // Make debug function available globally
+        window.debugPresentationMode = debugPresentationMode;
+
+        // Force score dock to be visible
+        function forceScoreDockVisible() {
+            const scoreDock = document.querySelector('.score-dock');
+            if (scoreDock) {
+                scoreDock.style.display = 'flex';
+                scoreDock.style.visibility = 'visible';
+                scoreDock.style.opacity = '1';
+                scoreDock.style.zIndex = '8000';
+                console.log('Score dock forced to be visible');
+            } else {
+                console.log('Score dock element not found');
+            }
+        }
+
+        // Make force function available globally
+        window.forceScoreDockVisible = forceScoreDockVisible;
+
+        // Audio testing function
+        function testAudio(audioFile) {
+            if (!audioFile) {
+                console.log('Available audio files:');
+                console.log('Songs & Baseball Teams:');
+                console.log('- I Left My Heart in San Francisco.mp3');
+                console.log('- Theme From New York, New York (2008 Remastered).mp3');
+                console.log('- Please Come To Boston.mp3');
+                console.log('- My Kind Of Town (2008 Remastered).mp3');
+                console.log('- Judy Garland - Meet Me in St. Louis.mp3');
+                console.log('Shepherd Songs & Rhymes:');
+                console.log('- baa-baa-black-sheep.mp3');
+                console.log('- mary-had-little-lamb.mp3');
+                console.log('- The King Of Love My Shepherd Is | Christian Hymn | Psalm 23 | Choir with Lyrics | Sunday 7pm Choir.mp3');
+                console.log('- shepherd-me-o-god.mp3');
+                console.log('- Shepherd of Souls.mp3');
+                console.log('Other sounds:');
+                console.log('- jeopardy-theme-main-part-only.mp3');
+                console.log('- times-up.mp3');
+                console.log('- rightanswer.mp3');
+                console.log('- myinstants.mp3');
+                return;
+            }
+            
+            try {
+                const audio = new Audio(audioFile);
+                audio.volume = 0.5;
+                audio.play().then(() => {
+                    console.log('Audio played successfully:', audioFile);
+                }).catch(e => {
+                    console.log('Audio playback failed:', audioFile, e);
+                });
+            } catch (e) {
+                console.log('Error creating audio:', audioFile, e);
+            }
+        }
+
+        // Make test function available globally
+        window.testAudio = testAudio;
+
+        // Debug presentation mode function
+        function debugPresentationMode() {
+            console.log('=== PRESENTATION MODE DEBUG ===');
+            console.log('Body classes:', document.body.className);
+            console.log('Body has presentation-mode class:', document.body.classList.contains('presentation-mode'));
+            console.log('Current set:', currentSet);
+            
+            // Check containers
+            const set1Container = document.getElementById('set1Container');
+            const set2Container = document.getElementById('set2Container');
+            console.log('Set 1 container:', set1Container);
+            console.log('Set 1 container classes:', set1Container ? set1Container.className : 'Not found');
+            console.log('Set 1 container computed display:', set1Container ? window.getComputedStyle(set1Container).display : 'Not found');
+            console.log('Set 2 container:', set2Container);
+            console.log('Set 2 container classes:', set2Container ? set2Container.className : 'Not found');
+            console.log('Set 2 container computed display:', set2Container ? window.getComputedStyle(set2Container).display : 'Not found');
+            
+            // Check game boards
+            const set1GameBoard = document.getElementById('set1GameBoard');
+            const set2GameBoard = document.getElementById('set2GameBoard');
+            console.log('Set 1 game board:', set1GameBoard);
+            console.log('Set 1 game board computed display:', set1GameBoard ? window.getComputedStyle(set1GameBoard).display : 'Not found');
+            console.log('Set 2 game board:', set2GameBoard);
+            console.log('Set 2 game board computed display:', set2GameBoard ? window.getComputedStyle(set2GameBoard).display : 'Not found');
+            
+            // Check set switcher
+            const setSwitcher = document.getElementById('setSwitcher');
+            console.log('Set switcher:', setSwitcher);
+            console.log('Set switcher computed display:', setSwitcher ? window.getComputedStyle(setSwitcher).display : 'Not found');
+            
+            // Check main intro
+            const mainIntro = document.getElementById('mainIntro');
+            console.log('Main intro:', mainIntro);
+            console.log('Main intro classes:', mainIntro ? mainIntro.className : 'Not found');
+            console.log('Main intro computed display:', mainIntro ? window.getComputedStyle(mainIntro).display : 'Not found');
+        }
+
+        // Make debug function available globally
+        window.debugPresentationMode = debugPresentationMode;
+
+        // Force presentation mode to work
+        function forcePresentationMode() {
+            console.log('=== FORCING PRESENTATION MODE ===');
+            
+            // Ensure body has presentation mode class
+            document.body.classList.add('presentation-mode');
+            console.log('Added presentation-mode class to body');
+            
+            // Force show current set
+            if (currentSet) {
+                const container = document.getElementById(currentSet + 'Container');
+                if (container) {
+                    container.classList.add('active');
+                    container.style.setProperty('display', 'flex', 'important');
+                    container.style.setProperty('visibility', 'visible', 'important');
+                    container.style.setProperty('opacity', '1', 'important');
+                    container.style.setProperty('width', '100vw', 'important');
+                    container.style.setProperty('height', '100vh', 'important');
+                    container.style.setProperty('position', 'fixed', 'important');
+                    container.style.setProperty('top', '0', 'important');
+                    container.style.setProperty('left', '0', 'important');
+                    container.style.setProperty('z-index', '2', 'important');
+                    console.log('Force applied styles to:', currentSet + 'Container');
+                }
+            }
+            
+            // Force show set switcher
+            const setSwitcher = document.getElementById('setSwitcher');
+            if (setSwitcher) {
+                setSwitcher.style.setProperty('display', 'flex', 'important');
+                setSwitcher.style.setProperty('visibility', 'visible', 'important');
+                setSwitcher.style.setProperty('opacity', '1', 'important');
+                console.log('Force shown set switcher');
+            }
+            
+            // Force hide main intro
+            const mainIntro = document.getElementById('mainIntro');
+            if (mainIntro) {
+                mainIntro.classList.add('hidden');
+                mainIntro.style.setProperty('display', 'none', 'important');
+                console.log('Force hidden main intro');
+            }
+            
+            console.log('Presentation mode forced!');
+        }
+
+        // Make force function available globally
+        window.forcePresentationMode = forcePresentationMode;
+
+        // Simple test function to start Set 1
+        function testSet1() {
+            console.log('=== TESTING SET 1 ===');
+            currentSet = 'set1';
+            document.getElementById('mainIntro').classList.add('hidden');
+            document.getElementById('setSwitcher').style.display = 'flex';
+            
+            const container = document.getElementById('set1Container');
+            if (container) {
+                container.classList.add('active');
+                container.style.display = 'flex';
+                container.style.visibility = 'visible';
+                container.style.opacity = '1';
+                console.log('Set 1 should be visible now');
+            }
+        }
+
+        // Simple test function to start Set 2
+        function testSet2() {
+            console.log('=== TESTING SET 2 ===');
+            currentSet = 'set2';
+            document.getElementById('mainIntro').classList.add('hidden');
+            document.getElementById('setSwitcher').style.display = 'flex';
+            
+            const container = document.getElementById('set2Container');
+            if (container) {
+                container.classList.add('active');
+                container.style.display = 'flex';
+                container.style.visibility = 'visible';
+                container.style.opacity = '1';
+                console.log('Set 2 should be visible now');
+            }
+        }
+
+        // Make test functions available globally
+        window.testSet1 = testSet1;
+        window.testSet2 = testSet2;
+
+        // Function to manually start intro music (for user interaction)
+        function startIntroMusic() {
+            console.log('Manually starting intro music...');
+            if (!introMusicStarted) {
+                playMainIntroMusic();
+            } else {
+                console.log('Intro music already started, skipping manual start');
+            }
+        }
+
+        // Make intro music function available globally
+        window.startIntroMusic = startIntroMusic;
+
+        // Emergency presentation mode fix
+        function emergencyPresentationMode() {
+            console.log('=== EMERGENCY PRESENTATION MODE FIX ===');
+            
+            // Force remove all inline styles that might be blocking
+            const set1Container = document.getElementById('set1Container');
+            const set2Container = document.getElementById('set2Container');
+            
+            if (set1Container) {
+                set1Container.style.cssText = '';
+                set1Container.classList.add('active');
+                console.log('Reset Set 1 container styles');
+            }
+            
+            if (set2Container) {
+                set2Container.style.cssText = '';
+                set2Container.classList.add('active');
+                console.log('Reset Set 2 container styles');
+            }
+            
+            // Force show current set
+            if (currentSet) {
+                const container = document.getElementById(currentSet + 'Container');
+                if (container) {
+                    container.style.setProperty('display', 'flex', 'important');
+                    container.style.setProperty('visibility', 'visible', 'important');
+                    container.style.setProperty('opacity', '1', 'important');
+                    container.style.setProperty('width', '100vw', 'important');
+                    container.style.setProperty('height', '100vh', 'important');
+                    container.style.setProperty('position', 'fixed', 'important');
+                    container.style.setProperty('top', '0', 'important');
+                    container.style.setProperty('left', '0', 'important');
+                    container.style.setProperty('z-index', '9999', 'important');
+                    console.log('Emergency styles applied to:', currentSet + 'Container');
+                }
+            }
+            
+            // Force hide main intro
+            const mainIntro = document.getElementById('mainIntro');
+            if (mainIntro) {
+                mainIntro.style.setProperty('display', 'none', 'important');
+                mainIntro.classList.add('hidden');
+                console.log('Emergency hidden main intro');
+            }
+            
+            // Force show set switcher
+            const setSwitcher = document.getElementById('setSwitcher');
+            if (setSwitcher) {
+                setSwitcher.style.setProperty('display', 'flex', 'important');
+                setSwitcher.style.setProperty('visibility', 'visible', 'important');
+                setSwitcher.style.setProperty('opacity', '1', 'important');
+                console.log('Emergency shown set switcher');
+            }
+            
+            console.log('Emergency presentation mode fix applied!');
+        }
+
+        // Make emergency function available globally
+        window.emergencyPresentationMode = emergencyPresentationMode;
+    </script>
+</body>
+</html>

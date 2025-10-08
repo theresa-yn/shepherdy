@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <!-- Sky gradient -->
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8F4F8;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#D1E7DD;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#B8D4E3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A8C8D8;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Hills gradient -->
+    <linearGradient id="hills" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A7C59;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#5A8C69;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#6A9C79;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7AAC89;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Grass texture -->
+    <pattern id="grass" patternUnits="userSpaceOnUse" width="20" height="20">
+      <rect width="20" height="20" fill="#4A7C59"/>
+      <circle cx="5" cy="15" r="1" fill="#5A8C69" opacity="0.3"/>
+      <circle cx="15" cy="18" r="1" fill="#5A8C69" opacity="0.3"/>
+      <circle cx="10" cy="12" r="0.5" fill="#6A9C79" opacity="0.4"/>
+    </pattern>
+  </defs>
+  
+  <!-- Sky -->
+  <rect width="1200" height="400" fill="url(#sky)"/>
+  
+  <!-- Hills -->
+  <path d="M0,400 Q200,350 400,380 T800,400 Q1000,370 1200,400 L1200,800 L0,800 Z" fill="url(#hills)"/>
+  <path d="M0,450 Q300,400 600,430 T1200,450 L1200,800 L0,800 Z" fill="url(#pattern)" opacity="0.7"/>
+  
+  <!-- Grass texture overlay -->
+  <rect x="0" y="400" width="1200" height="400" fill="url(#grass)" opacity="0.3"/>
+  
+  <!-- Sheep 1 - Large foreground sheep (bottom right) -->
+  <ellipse cx="900" cy="650" rx="25" ry="20" fill="#F5F5DC"/>
+  <ellipse cx="880" cy="640" rx="12" ry="10" fill="#333"/>
+  <circle cx="885" cy="635" r="3" fill="#FFF"/>
+  <circle cx="875" cy="635" r="3" fill="#FFF"/>
+  <ellipse cx="920" cy="650" rx="8" ry="6" fill="#F5F5DC"/>
+  <ellipse cx="925" cy="655" rx="6" ry="4" fill="#F5F5DC"/>
+  
+  <!-- Sheep 2 - Center left group -->
+  <ellipse cx="300" cy="600" rx="20" ry="16" fill="#F5F5DC"/>
+  <ellipse cx="285" cy="590" rx="10" ry="8" fill="#333"/>
+  <circle cx="288" cy="585" r="2.5" fill="#FFF"/>
+  <circle cx="282" cy="585" r="2.5" fill="#FFF"/>
+  <ellipse cx="315" cy="600" rx="6" ry="5" fill="#F5F5DC"/>
+  
+  <!-- Sheep 3 - Midground cluster -->
+  <ellipse cx="500" cy="580" rx="18" ry="14" fill="#F5F5DC"/>
+  <ellipse cx="485" cy="570" rx="9" ry="7" fill="#333"/>
+  <circle cx="488" cy="565" r="2" fill="#FFF"/>
+  <circle cx="482" cy="565" r="2" fill="#FFF"/>
+  
+  <!-- Sheep 4 - Background scattered -->
+  <ellipse cx="150" cy="550" rx="15" ry="12" fill="#F5F5DC"/>
+  <ellipse cx="140" cy="542" rx="8" ry="6" fill="#333"/>
+  <circle cx="142" cy="538" r="2" fill="#FFF"/>
+  
+  <ellipse cx="700" cy="520" rx="16" ry="13" fill="#F5F5DC"/>
+  <ellipse cx="685" cy="512" rx="8" ry="6" fill="#333"/>
+  <circle cx="687" cy="508" r="2" fill="#FFF"/>
+  
+  <ellipse cx="1000" cy="540" rx="14" ry="11" fill="#F5F5DC"/>
+  <ellipse cx="990" cy="532" rx="7" ry="5" fill="#333"/>
+  <circle cx="992" cy="528" r="2" fill="#FFF"/>
+  
+  <!-- Sheep 5 - Far background -->
+  <ellipse cx="200" cy="480" rx="12" ry="10" fill="#F5F5DC"/>
+  <ellipse cx="192" cy="474" rx="6" ry="5" fill="#333"/>
+  <circle cx="194" cy="471" r="1.5" fill="#FFF"/>
+  
+  <ellipse cx="800" cy="460" rx="13" ry="10" fill="#F5F5DC"/>
+  <ellipse cx="790" cy="454" rx="6" ry="5" fill="#333"/>
+  <circle cx="792" cy="451" r="1.5" fill="#FFF"/>
+  
+  <!-- Small wildflowers -->
+  <circle cx="100" cy="750" r="2" fill="#FFD700" opacity="0.6"/>
+  <circle cx="250" cy="720" r="1.5" fill="#FFD700" opacity="0.5"/>
+  <circle cx="400" cy="740" r="2" fill="#FFD700" opacity="0.6"/>
+  <circle cx="600" cy="730" r="1.5" fill="#FFD700" opacity="0.5"/>
+  <circle cx="850" cy="750" r="2" fill="#FFD700" opacity="0.6"/>
+  <circle cx="1100" cy="720" r="1.5" fill="#FFD700" opacity="0.5"/>
+</svg>
