@@ -2070,3 +2070,17 @@ body.presentation-mode .set-selector,
         font-size: 0.85rem;
     }
 }
+
+/* Hide test buttons on GitHub Pages */
+button[onclick*="testAudio"],
+button[onclick*="testSet1"],
+button[onclick*="testSet2"],
+button:contains("Test"),
+button:contains("test"),
+.test-button,
+#test-button,
+.test-audio-button,
+#test-audio-button {
+    display: none !important;
+    visibility: hidden !important;
+}

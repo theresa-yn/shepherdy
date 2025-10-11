@@ -2346,6 +2346,31 @@
 
         // Make emergency function available globally
         window.emergencyPresentationMode = emergencyPresentationMode;
+
+        // Hide any test buttons that might exist
+        function hideTestButtons() {
+            // Hide buttons with test-related onclick handlers
+            const testButtons = document.querySelectorAll('button[onclick*="testAudio"], button[onclick*="testSet1"], button[onclick*="testSet2"]');
+            testButtons.forEach(button => {
+                button.style.display = 'none';
+                button.style.visibility = 'hidden';
+            });
+            
+            // Hide buttons with test-related text
+            const allButtons = document.querySelectorAll('button');
+            allButtons.forEach(button => {
+                if (button.textContent.toLowerCase().includes('test')) {
+                    button.style.display = 'none';
+                    button.style.visibility = 'hidden';
+                }
+            });
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', hideTestButtons);
+        
+        // Run periodically to catch dynamically added buttons
+        setInterval(hideTestButtons, 1000);
     </script>
 </body>
 </html>
