@@ -1501,9 +1501,6 @@
             
             // Stop intro music when starting a game
             stopMainIntroMusic();
-            
-            // Play Set button sound
-            playSetButtonSound();
             document.getElementById('mainIntro').classList.add('hidden');
             document.getElementById('setSwitcher').style.display = 'flex';
             
@@ -1541,8 +1538,6 @@
             
             // Stop intro music when switching sets (if it's playing)
             stopMainIntroMusic();
-            
-            playGameSound(); // Play myinstants.mp3 when switching sets
             
             // Hide current set
             const currentContainer = document.getElementById(currentSet + 'Container');
