@@ -601,20 +601,34 @@
 
         // Toggle presentation mode for full-screen experience
         function togglePresentationMode() {
+            console.log('=== togglePresentationMode called ===');
+            console.log('Current time:', new Date().toISOString());
+            
             // Always keep presentation mode enabled
             document.body.classList.add('presentation-mode');
             console.log('Presentation mode is always enabled');
             
             // Stop intro music when clicking full screen button
+            console.log('Stopping main intro music...');
             stopMainIntroMusic();
             
             // Try to enter browser full-screen
+            console.log('Attempting to enter fullscreen...');
             if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
+                document.documentElement.requestFullscreen().then(() => {
+                    console.log('✅ Successfully entered fullscreen');
+                    // Play jeopardy theme music ONLY when fullscreen is actually entered
+                    console.log('Playing jeopardy theme sound after entering fullscreen...');
+                    playJeopardyThemeSound();
+                }).catch(e => {
+                    console.log('❌ Failed to enter fullscreen:', e);
+                });
             } else if (document.documentElement.webkitRequestFullscreen) {
                 document.documentElement.webkitRequestFullscreen();
+                // For webkit browsers, we'll use the fullscreen change event
             } else if (document.documentElement.mozRequestFullScreen) {
                 document.documentElement.mozRequestFullScreen();
+                // For moz browsers, we'll use the fullscreen change event
             }
         }
 
@@ -640,6 +654,9 @@
             
             // Set up event listeners
             setupEventListeners();
+            
+            // Set up fullscreen change listeners
+            setupFullscreenListeners();
             
             // Don't auto-play intro music - wait for user interaction
             
@@ -1829,6 +1846,55 @@
             });
         }
 
+        // Set up fullscreen change listeners to play audio when entering fullscreen
+        function setupFullscreenListeners() {
+            console.log('Setting up fullscreen listeners...');
+            
+            // Listen for fullscreen changes
+            document.addEventListener('fullscreenchange', () => {
+                console.log('Fullscreen change detected');
+                if (document.fullscreenElement) {
+                    console.log('✅ Entered fullscreen - playing jeopardy theme');
+                    playJeopardyThemeSound();
+                } else {
+                    console.log('Exited fullscreen');
+                }
+            });
+            
+            // Listen for webkit fullscreen changes
+            document.addEventListener('webkitfullscreenchange', () => {
+                console.log('Webkit fullscreen change detected');
+                if (document.webkitFullscreenElement) {
+                    console.log('✅ Entered webkit fullscreen - playing jeopardy theme');
+                    playJeopardyThemeSound();
+                } else {
+                    console.log('Exited webkit fullscreen');
+                }
+            });
+            
+            // Listen for moz fullscreen changes
+            document.addEventListener('mozfullscreenchange', () => {
+                console.log('Moz fullscreen change detected');
+                if (document.mozFullScreenElement) {
+                    console.log('✅ Entered moz fullscreen - playing jeopardy theme');
+                    playJeopardyThemeSound();
+                } else {
+                    console.log('Exited moz fullscreen');
+                }
+            });
+            
+            // Listen for ms fullscreen changes
+            document.addEventListener('MSFullscreenChange', () => {
+                console.log('MS fullscreen change detected');
+                if (document.msFullscreenElement) {
+                    console.log('✅ Entered MS fullscreen - playing jeopardy theme');
+                    playJeopardyThemeSound();
+                } else {
+                    console.log('Exited MS fullscreen');
+                }
+            });
+        }
+
         function setupTeamNameEditing() {
             // Set up team name editing for all team name elements
             const teamNameElements = [
@@ -1939,6 +2005,60 @@
                 }).catch(e => console.log('Jeopardy countdown sound failed:', e));
             } catch (e) {
                 console.log('Error playing jeopardy countdown sound:', e);
+            }
+        }
+
+        // Play jeopardy theme music for full screen mode
+        function playJeopardyThemeSound() {
+            console.log('=== playJeopardyThemeSound called ===');
+            console.log('audioEnabled:', audioEnabled);
+            console.log('Current time:', new Date().toISOString());
+            
+            if (!audioEnabled) {
+                console.log('Audio is disabled, returning early');
+                return;
+            }
+            
+            try {
+                console.log('Creating new Audio object for jeopardy-themelq.mp3');
+                const audio = new Audio('jeopardy-themelq.mp3');
+                audio.volume = 0.8;
+                
+                // Add event listeners for debugging
+                audio.addEventListener('loadstart', () => console.log('Audio load started'));
+                audio.addEventListener('canplay', () => console.log('Audio can play'));
+                audio.addEventListener('error', (e) => console.log('Audio error:', e));
+                audio.addEventListener('play', () => console.log('Audio started playing'));
+                audio.addEventListener('ended', () => console.log('Audio finished playing'));
+                
+                console.log('Attempting to play audio...');
+                const playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('✅ Jeopardy theme sound played successfully');
+                    }).catch(e => {
+                        console.log('❌ Jeopardy theme sound failed to play:', e);
+                        console.log('Error name:', e.name);
+                        console.log('Error message:', e.message);
+                        
+                        // Try to handle autoplay restrictions
+                        if (e.name === 'NotAllowedError') {
+                            console.log('Autoplay blocked - user interaction required');
+                            // Try to play after a short delay
+                            setTimeout(() => {
+                                console.log('Retrying audio play after delay...');
+                                audio.play().catch(retryError => {
+                                    console.log('Retry also failed:', retryError);
+                                });
+                            }, 100);
+                        }
+                    });
+                } else {
+                    console.log('Audio.play() returned undefined');
+                }
+            } catch (e) {
+                console.log('❌ Error creating or playing jeopardy theme sound:', e);
             }
         }
 
