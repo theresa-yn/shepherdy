@@ -619,20 +619,6 @@
                 // Stop intro music when entering full screen mode
                 stopMainIntroMusic();
                 
-                // Play jeopardy theme for full screen mode
-                if (audioEnabled) {
-                    try {
-                        const audio = new Audio('jeopardy-themelq.mp3');
-                        audio.volume = 0.6;
-                        console.log('Playing jeopardy theme for full screen mode');
-                        audio.play().catch(e => {
-                            console.log('Jeopardy theme playback failed:', e);
-                        });
-                    } catch (e) {
-                        console.log('Error playing jeopardy theme:', e);
-                    }
-                }
-                
                 // Also try to enter browser full-screen
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen();
