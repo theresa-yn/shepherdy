@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHEPHERDY - The Ultimate Trivia Game</title>
+    <title>The Ultimate Trivia Game</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Main page specific styles */
@@ -13,7 +13,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('sheep.jpg') center 30%/cover no-repeat fixed;
+            background: url('screenshot.png') center/cover no-repeat fixed;
+            background-size: cover;
+            background-position: center center;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -178,11 +183,18 @@
     <!-- Main Introduction Screen -->
     <div class="main-intro" id="mainIntro">
         <div class="intro-overlay"></div>
-        <h1 class="intro-title">SHEPHERDY</h1>
+        <h1 class="intro-title"></h1>
         <div class="set-selector">
-            <button class="set-btn" onclick="startGame('set1')">Set 1</button>
-            <button class="set-btn" onclick="startGame('set2')">Set 2</button>
-            <button class="presentation-btn" onclick="togglePresentationMode()">Full Screen</button>
+            <div class="dropdown-menu">
+                <button class="dropdown-toggle" onclick="toggleDropdown()">
+                    <span class="plus-icon">+</span>
+                </button>
+                <div class="dropdown-content" id="dropdownContent">
+                    <button class="dropdown-item" onclick="startGame('set1')">Set 1</button>
+                    <button class="dropdown-item" onclick="startGame('set2')">Set 2</button>
+                    <button class="dropdown-item" onclick="togglePresentationMode()">Full Screen</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -197,7 +209,7 @@
     <!-- Game Container for Set 1 -->
     <div class="game-container" id="set1Container">
         <header class="game-header">
-            <h1>SHEPHERDY - Set 1</h1>
+            <h1>Set 1</h1>
         </header>
         
         <div class="game-board" id="set1GameBoard">
@@ -258,10 +270,11 @@
         
         <div class="question-modal" id="set1QuestionModal">
                 <div class="modal-content">
-                    <div class="question-header">
+                <div class="question-header">
                     <span class="category-name" id="set1CategoryName"></span>
+                    <span class="timer-display" id="set1TimerDisplay">30</span>
                     <span class="point-value" id="set1PointValue"></span>
-                    </div>
+                </div>
                 <div class="question-text" id="set1QuestionText"></div>
                 <div class="question-answer" id="set1QuestionAnswer" style="display: none;"></div>
                     <div class="modal-controls">
@@ -275,7 +288,7 @@
     <!-- Game Container for Set 2 -->
     <div class="game-container" id="set2Container">
         <header class="game-header">
-            <h1>SHEPHERDY - Set 2</h1>
+            <h1>Set 2</h1>
         </header>
         
         <div class="game-board" id="set2GameBoard">
@@ -338,6 +351,7 @@
             <div class="modal-content">
                 <div class="question-header">
                     <span class="category-name" id="set2CategoryName"></span>
+                    <span class="timer-display" id="set2TimerDisplay">30</span>
                     <span class="point-value" id="set2PointValue"></span>
                 </div>
                 <div class="question-text" id="set2QuestionText"></div>
@@ -559,6 +573,32 @@
             ]
         };
 
+        // Toggle dropdown menu
+        function toggleDropdown() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            
+            if (dropdownContent.classList.contains('show')) {
+                dropdownContent.classList.remove('show');
+                dropdownToggle.classList.remove('active');
+            } else {
+                dropdownContent.classList.add('show');
+                dropdownToggle.classList.add('active');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            const dropdownContent = document.getElementById('dropdownContent');
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            
+            if (dropdownMenu && !dropdownMenu.contains(event.target)) {
+                dropdownContent.classList.remove('show');
+                dropdownToggle.classList.remove('active');
+            }
+        });
+
         // Toggle presentation mode for full-screen experience
         function togglePresentationMode() {
             if (document.body.classList.contains('presentation-mode')) {
@@ -575,6 +615,21 @@
             } else {
                 document.body.classList.add('presentation-mode');
                 console.log('Entered presentation mode');
+                
+                // Play jeopardy theme for full screen mode
+                if (audioEnabled) {
+                    try {
+                        const audio = new Audio('jeopardy-themelq.mp3');
+                        audio.volume = 0.6;
+                        console.log('Playing jeopardy theme for full screen mode');
+                        audio.play().catch(e => {
+                            console.log('Jeopardy theme playback failed:', e);
+                        });
+                    } catch (e) {
+                        console.log('Error playing jeopardy theme:', e);
+                    }
+                }
+                
                 // Also try to enter browser full-screen
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen();
@@ -669,6 +724,13 @@
                     questionCell.textContent = category.questions[row].value;
                     questionCell.dataset.category = colIndex;
                     questionCell.dataset.question = row;
+                    
+                    // Add specific class for values 200, 400, 600, 800, and 1000
+                    const value = category.questions[row].value;
+                    if (value === 200 || value === 400 || value === 600 || value === 800 || value === 1000) {
+                        questionCell.classList.add(`value-${value}`);
+                    }
+                    
                     questionCell.addEventListener('click', () => {
                         showQuestion(setId, colIndex, row, gameData);
                     });
@@ -721,11 +783,97 @@
                 modal.style.opacity = '1';
             }, 10);
             
+            // Start 30-second timer
+            startQuestionTimer(setId);
+            
             // Mark cell as selected
             cell.style.backgroundColor = '#FFD700';
             cell.style.color = '#000';
             cell.style.transform = 'scale(1.1)';
             cell.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.8)';
+        }
+
+        // Timer functions
+        let questionTimer = null;
+        let questionTimeLeft = 30;
+
+        function startQuestionTimer(setId) {
+            // Clear any existing timer
+            if (questionTimer) {
+                clearInterval(questionTimer);
+            }
+            
+            // Reset timer
+            questionTimeLeft = 30;
+            const timerDisplay = document.getElementById(setId + 'TimerDisplay');
+            timerDisplay.textContent = '30';
+            timerDisplay.className = 'timer-display ready'; // Show ready state
+            
+            // Add click event listener to timer
+            timerDisplay.onclick = function() {
+                // Play jeopardy countdown sound
+                playJeopardyCountdownSound();
+                
+                // Add visual feedback
+                timerDisplay.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    timerDisplay.style.transform = 'scale(1)';
+                }, 200);
+                
+                // Only start countdown if not already running
+                if (!questionTimer) {
+                    startCountdown(setId);
+                }
+            };
+            
+            // Don't start countdown automatically - wait for click
+        }
+
+        function startCountdown(setId) {
+            const timerDisplay = document.getElementById(setId + 'TimerDisplay');
+            
+            // Remove ready class and start normal countdown
+            timerDisplay.classList.remove('ready');
+            
+            questionTimer = setInterval(() => {
+                questionTimeLeft--;
+                timerDisplay.textContent = questionTimeLeft;
+                
+                // Add visual warnings
+                if (questionTimeLeft <= 5) {
+                    timerDisplay.classList.add('danger');
+                } else if (questionTimeLeft <= 10) {
+                    timerDisplay.classList.add('warning');
+                }
+                
+                // Timer expired
+                if (questionTimeLeft <= 0) {
+                    clearInterval(questionTimer);
+                    questionTimer = null;
+                    handleTimerExpired(setId);
+                }
+            }, 1000);
+        }
+
+        function stopQuestionTimer() {
+            if (questionTimer) {
+                clearInterval(questionTimer);
+                questionTimer = null;
+            }
+        }
+
+        function handleTimerExpired(setId) {
+            // Don't play time's up sound - keep it silent
+            
+            // Don't show answer automatically - let user decide when to show it
+            
+            // Update timer display
+            const timerDisplay = document.getElementById(setId + 'TimerDisplay');
+            timerDisplay.textContent = 'TIME UP!';
+            timerDisplay.classList.add('danger');
+            
+            // Keep scoring buttons enabled for manual control
+            // Don't disable the buttons - let user decide scoring manually
         }
 
         // Add scoring buttons to modal
@@ -786,6 +934,10 @@
         // Close modal
         function closeModal(setId) {
             console.log('closeModal called with setId:', setId);
+            
+            // Stop the timer
+            stopQuestionTimer();
+            
             const modal = document.getElementById(setId + 'QuestionModal');
             console.log('Modal element:', modal);
             if (modal) {
@@ -839,6 +991,9 @@
 
         // Show answer
         function showAnswer(setId) {
+            // Stop the timer when answer is shown
+            stopQuestionTimer();
+            
             document.getElementById(setId + 'QuestionAnswer').style.display = 'block';
             document.getElementById(setId + 'ShowAnswerBtn').style.display = 'none';
         }
@@ -979,7 +1134,7 @@
 
             // Play celebration sound if available
             try {
-                const celebrationAudio = new Audio('jeopardy-theme-main-part-only.mp3');
+                const celebrationAudio = new Audio('myinstants.mp3');
                 celebrationAudio.volume = 0.6;
                 celebrationAudio.play().catch(e => console.log('Celebration audio failed:', e));
             } catch (e) {
@@ -1057,7 +1212,7 @@
             }
             
             try {
-                introMusicAudio = new Audio('jeopardy-theme-main-part-only.mp3');
+                introMusicAudio = new Audio('jeopardy-themelq.mp3');
                 introMusicAudio.volume = 0.4;
                 introMusicAudio.loop = false; // Play only once, don't loop
                 console.log('Attempting to play main intro music (once)...');
@@ -1802,6 +1957,20 @@
             }
         }
 
+        function playJeopardyCountdownSound() {
+            console.log('playJeopardyCountdownSound called, audioEnabled:', audioEnabled);
+            if (!audioEnabled) return;
+            try {
+                const audio = new Audio('jeopardy-countdown_7GSecTc.mp3');
+                audio.volume = 0.8;
+                audio.play().then(() => {
+                    console.log('Jeopardy countdown sound played successfully');
+                }).catch(e => console.log('Jeopardy countdown sound failed:', e));
+            } catch (e) {
+                console.log('Error playing jeopardy countdown sound:', e);
+            }
+        }
+
         // Play question-specific audio for Songs & Baseball Teams and Shepherd Songs categories
         function playQuestionAudio(categoryName, question) {
             if (!audioEnabled) return;
@@ -1955,7 +2124,7 @@
                 console.log('- shepherd-me-o-god.mp3');
                 console.log('- Shepherd of Souls.mp3');
                 console.log('Other sounds:');
-                console.log('- jeopardy-theme-main-part-only.mp3');
+                console.log('- myinstants.mp3');
                 console.log('- times-up.mp3');
                 console.log('- rightanswer.mp3');
                 console.log('- myinstants.mp3');

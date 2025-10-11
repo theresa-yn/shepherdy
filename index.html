@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHEPHERDY - The Ultimate Trivia Game</title>
+    <title>The Ultimate Trivia Game</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Main page specific styles */
@@ -13,7 +13,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('sheep.jpg') center 30%/cover no-repeat fixed;
+            background: url('screenshot.png') center/cover no-repeat fixed;
+            background-size: cover;
+            background-position: center center;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -178,25 +183,39 @@
     <!-- Main Introduction Screen -->
     <div class="main-intro" id="mainIntro">
         <div class="intro-overlay"></div>
-        <h1 class="intro-title">SHEPHERDY</h1>
+        <h1 class="intro-title"></h1>
         <div class="set-selector">
-            <button class="set-btn" onclick="startGame('set1')">Set 1</button>
-            <button class="set-btn" onclick="startGame('set2')">Set 2</button>
+            <button class="set-btn" onclick="playMyInstantsSound()" style="background: linear-gradient(145deg, #8b5cf6, #7c3aed); color: white; margin-bottom: 10px;">
+                🔊 Test Audio
+            </button>
+            <div class="dropdown-menu">
+                <button class="dropdown-toggle" onclick="toggleDropdown()">
+                    <span class="plus-icon">+</span>
+                </button>
+                <div class="dropdown-content" id="dropdownContent">
+                    <button class="dropdown-item" onclick="playMyInstantsSound(); startGame('set1')">Set 1</button>
+                    <button class="dropdown-item" onclick="playMyInstantsSound(); startGame('set2')">Set 2</button>
+                    <button class="dropdown-item" onclick="togglePresentationMode()">Full Screen</button>
+                </div>
+            </div>
         </div>
     </div>
     
     <!-- Set Switcher (visible when game is active) -->
     <div class="set-switcher" id="setSwitcher" style="display: none;">
-        <button class="switch-btn" id="set1Switch" onclick="switchToSet('set1')">Set 1</button>
-        <button class="switch-btn" id="set2Switch" onclick="switchToSet('set2')">Set 2</button>
+        <button class="switch-btn" id="set1Switch" onclick="playMyInstantsSound(); switchToSet('set1')">Set 1</button>
+        <button class="switch-btn" id="set2Switch" onclick="playMyInstantsSound(); switchToSet('set2')">Set 2</button>
         <button class="switch-btn" onclick="showTracker()">Score Tracker</button>
         <button class="switch-btn" onclick="showMainIntro()">Main</button>
+        <button class="switch-btn" id="audioToggle" onclick="toggleAudio()" style="background: linear-gradient(145deg, #22c55e, #16a34a); color: white;">
+            🔊 Audio ON
+        </button>
     </div>
 
     <!-- Game Container for Set 1 -->
     <div class="game-container" id="set1Container">
         <header class="game-header">
-            <h1>SHEPHERDY - Set 1</h1>
+            <h1>Set 1</h1>
         </header>
         
         <div class="game-board" id="set1GameBoard">
@@ -274,7 +293,7 @@
     <!-- Game Container for Set 2 -->
     <div class="game-container" id="set2Container">
         <header class="game-header">
-            <h1>SHEPHERDY - Set 2</h1>
+            <h1>Set 2</h1>
         </header>
         
         <div class="game-board" id="set2GameBoard">
@@ -1097,16 +1116,40 @@
 
         // Play myinstants.mp3 sound
         function playMyInstantsSound() {
-            if (!audioEnabled) return;
+            console.log('playMyInstantsSound called, audioEnabled:', audioEnabled);
+            if (!audioEnabled) {
+                console.log('Audio is disabled, skipping myinstants sound');
+                return;
+            }
             
             try {
-                const audio = new Audio('myinstants.mp3');
-                audio.volume = 0.6;
-                audio.play().catch(e => {
+                // Try both relative and absolute paths
+                const audio = new Audio('./myinstants.mp3');
+                audio.volume = 0.8; // Increased volume
+                console.log('Attempting to play myinstants.mp3 with volume:', audio.volume);
+                console.log('Audio src:', audio.src);
+                
+                // Add event listeners for debugging
+                audio.addEventListener('loadstart', () => console.log('Audio load started'));
+                audio.addEventListener('canplay', () => console.log('Audio can play'));
+                audio.addEventListener('error', (e) => console.log('Audio error event:', e));
+                
+                audio.play().then(() => {
+                    console.log('Myinstants sound played successfully');
+                }).catch(e => {
                     console.log('Myinstants sound playback failed:', e);
+                    console.log('Error details:', e.name, e.message);
+                    console.log('Trying alternative path...');
+                    
+                    // Try alternative path
+                    const audio2 = new Audio('myinstants.mp3');
+                    audio2.volume = 0.8;
+                    audio2.play().catch(e2 => {
+                        console.log('Alternative path also failed:', e2);
+                    });
                 });
             } catch (e) {
-                console.log('Error playing myinstants sound:', e);
+                console.log('Error creating audio object for myinstants:', e);
             }
         }
 
@@ -1321,6 +1364,50 @@
             }
         }
 
+        // Toggle dropdown menu
+        function toggleDropdown() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            
+            if (dropdownContent.classList.contains('show')) {
+                dropdownContent.classList.remove('show');
+                dropdownToggle.classList.remove('active');
+            } else {
+                dropdownContent.classList.add('show');
+                dropdownToggle.classList.add('active');
+            }
+        }
+
+        // Toggle audio on/off
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const audioToggle = document.getElementById('audioToggle');
+            
+            if (audioEnabled) {
+                audioToggle.innerHTML = '🔊 Audio ON';
+                audioToggle.style.background = 'linear-gradient(145deg, #22c55e, #16a34a)';
+                console.log('Audio enabled');
+                // Test the sound when enabling
+                playMyInstantsSound();
+            } else {
+                audioToggle.innerHTML = '🔇 Audio OFF';
+                audioToggle.style.background = 'linear-gradient(145deg, #dc2626, #b91c1c)';
+                console.log('Audio disabled');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            const dropdownContent = document.getElementById('dropdownContent');
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            
+            if (dropdownMenu && !dropdownMenu.contains(event.target)) {
+                dropdownContent.classList.remove('show');
+                dropdownToggle.classList.remove('active');
+            }
+        });
+
         // Game navigation
         function startGame(set) {
             console.log('Starting game with set:', set);
@@ -1331,6 +1418,7 @@
             stopMainIntroMusic();
             
             // Play Set button sound
+            console.log('About to play Set button sound for:', set);
             playSetButtonSound();
             document.getElementById('mainIntro').classList.add('hidden');
             document.getElementById('setSwitcher').style.display = 'flex';
@@ -1370,6 +1458,7 @@
             // Stop intro music when switching sets (if it's playing)
             stopMainIntroMusic();
             
+            console.log('About to play game sound for set switch to:', set);
             playGameSound(); // Play myinstants.mp3 when switching sets
             
             // Hide current set
