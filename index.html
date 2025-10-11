@@ -616,6 +616,9 @@
                 document.body.classList.add('presentation-mode');
                 console.log('Entered presentation mode');
                 
+                // Stop intro music when entering full screen mode
+                stopMainIntroMusic();
+                
                 // Play jeopardy theme for full screen mode
                 if (audioEnabled) {
                     try {
