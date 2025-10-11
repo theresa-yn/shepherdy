@@ -646,6 +646,7 @@
             console.log('Initializing game...');
             console.log('Set 1 data:', set1GameData);
             console.log('Set 2 data:', set2GameData);
+            console.log('Presentation mode active:', document.body.classList.contains('presentation-mode'));
             
             // Load saved scores
             loadScores();
@@ -662,22 +663,17 @@
             
             // Don't auto-play intro music - wait for user interaction
             
-            // Test: Force show Set 2 for debugging
-            setTimeout(() => {
-                console.log('Testing Set 2 visibility...');
-                const set2Container = document.getElementById('set2Container');
-                const set2GameBoard = document.getElementById('set2GameBoard');
-                console.log('Set 2 container:', set2Container);
-                console.log('Set 2 game board:', set2GameBoard);
-                console.log('Set 2 container children:', set2Container ? set2Container.children.length : 'No container');
-                console.log('Set 2 game board children:', set2GameBoard ? set2GameBoard.children.length : 'No game board');
-            }, 2000);
+            // Fix presentation mode for GitHub Pages
+            fixPresentationMode();
             
-            // Try to enter fullscreen
+            // Debug presentation mode
             setTimeout(() => {
-            if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                }
+                console.log('=== PRESENTATION MODE DEBUG ===');
+                console.log('Body classes:', document.body.className);
+                console.log('Main intro display:', window.getComputedStyle(document.getElementById('mainIntro')).display);
+                console.log('Set 1 container display:', window.getComputedStyle(document.getElementById('set1Container')).display);
+                console.log('Set 2 container display:', window.getComputedStyle(document.getElementById('set2Container')).display);
+                console.log('Set switcher display:', window.getComputedStyle(document.getElementById('setSwitcher')).display);
             }, 1000);
         }
 
@@ -2346,6 +2342,55 @@
 
         // Make emergency function available globally
         window.emergencyPresentationMode = emergencyPresentationMode;
+
+        // Fix presentation mode for GitHub Pages
+        function fixPresentationMode() {
+            console.log('=== FIXING PRESENTATION MODE ===');
+            
+            // Ensure presentation mode class is on body
+            if (!document.body.classList.contains('presentation-mode')) {
+                document.body.classList.add('presentation-mode');
+                console.log('Added presentation-mode class to body');
+            }
+            
+            // Force show main intro initially
+            const mainIntro = document.getElementById('mainIntro');
+            if (mainIntro) {
+                mainIntro.classList.remove('hidden');
+                mainIntro.style.display = 'flex';
+                mainIntro.style.visibility = 'visible';
+                mainIntro.style.opacity = '1';
+                console.log('Main intro shown');
+            }
+            
+            // Hide set switcher initially
+            const setSwitcher = document.getElementById('setSwitcher');
+            if (setSwitcher) {
+                setSwitcher.style.display = 'none';
+                console.log('Set switcher hidden initially');
+            }
+            
+            // Hide game containers initially
+            const set1Container = document.getElementById('set1Container');
+            const set2Container = document.getElementById('set2Container');
+            
+            if (set1Container) {
+                set1Container.classList.remove('active');
+                set1Container.style.display = 'none';
+                console.log('Set 1 container hidden');
+            }
+            
+            if (set2Container) {
+                set2Container.classList.remove('active');
+                set2Container.style.display = 'none';
+                console.log('Set 2 container hidden');
+            }
+            
+            console.log('Presentation mode fixed!');
+        }
+
+        // Make fix function available globally
+        window.fixPresentationMode = fixPresentationMode;
     </script>
 </body>
 </html>
