@@ -1505,6 +1505,9 @@
             
             // Stop intro music when starting a game
             stopMainIntroMusic();
+            
+            // Stop jeopardy theme music when entering game board
+            stopJeopardyThemeSound();
             document.getElementById('mainIntro').classList.add('hidden');
             document.getElementById('setSwitcher').style.display = 'flex';
             
@@ -1857,7 +1860,8 @@
                     console.log('✅ Entered fullscreen - playing jeopardy theme');
                     playJeopardyThemeSound();
                 } else {
-                    console.log('Exited fullscreen');
+                    console.log('Exited fullscreen - stopping jeopardy theme');
+                    stopJeopardyThemeSound();
                 }
             });
             
@@ -1868,7 +1872,8 @@
                     console.log('✅ Entered webkit fullscreen - playing jeopardy theme');
                     playJeopardyThemeSound();
                 } else {
-                    console.log('Exited webkit fullscreen');
+                    console.log('Exited webkit fullscreen - stopping jeopardy theme');
+                    stopJeopardyThemeSound();
                 }
             });
             
@@ -1879,7 +1884,8 @@
                     console.log('✅ Entered moz fullscreen - playing jeopardy theme');
                     playJeopardyThemeSound();
                 } else {
-                    console.log('Exited moz fullscreen');
+                    console.log('Exited moz fullscreen - stopping jeopardy theme');
+                    stopJeopardyThemeSound();
                 }
             });
             
@@ -1890,7 +1896,8 @@
                     console.log('✅ Entered MS fullscreen - playing jeopardy theme');
                     playJeopardyThemeSound();
                 } else {
-                    console.log('Exited MS fullscreen');
+                    console.log('Exited MS fullscreen - stopping jeopardy theme');
+                    stopJeopardyThemeSound();
                 }
             });
         }
@@ -2008,6 +2015,9 @@
             }
         }
 
+        // Global variable to store jeopardy theme audio reference
+        let jeopardyThemeAudio = null;
+
         // Play jeopardy theme music for full screen mode
         function playJeopardyThemeSound() {
             console.log('=== playJeopardyThemeSound called ===');
@@ -2021,18 +2031,18 @@
             
             try {
                 console.log('Creating new Audio object for jeopardy-themelq.mp3');
-                const audio = new Audio('jeopardy-themelq.mp3');
-                audio.volume = 0.8;
+                jeopardyThemeAudio = new Audio('jeopardy-themelq.mp3');
+                jeopardyThemeAudio.volume = 0.8;
                 
                 // Add event listeners for debugging
-                audio.addEventListener('loadstart', () => console.log('Audio load started'));
-                audio.addEventListener('canplay', () => console.log('Audio can play'));
-                audio.addEventListener('error', (e) => console.log('Audio error:', e));
-                audio.addEventListener('play', () => console.log('Audio started playing'));
-                audio.addEventListener('ended', () => console.log('Audio finished playing'));
+                jeopardyThemeAudio.addEventListener('loadstart', () => console.log('Audio load started'));
+                jeopardyThemeAudio.addEventListener('canplay', () => console.log('Audio can play'));
+                jeopardyThemeAudio.addEventListener('error', (e) => console.log('Audio error:', e));
+                jeopardyThemeAudio.addEventListener('play', () => console.log('Audio started playing'));
+                jeopardyThemeAudio.addEventListener('ended', () => console.log('Audio finished playing'));
                 
                 console.log('Attempting to play audio...');
-                const playPromise = audio.play();
+                const playPromise = jeopardyThemeAudio.play();
                 
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
@@ -2048,7 +2058,7 @@
                             // Try to play after a short delay
                             setTimeout(() => {
                                 console.log('Retrying audio play after delay...');
-                                audio.play().catch(retryError => {
+                                jeopardyThemeAudio.play().catch(retryError => {
                                     console.log('Retry also failed:', retryError);
                                 });
                             }, 100);
@@ -2059,6 +2069,23 @@
                 }
             } catch (e) {
                 console.log('❌ Error creating or playing jeopardy theme sound:', e);
+            }
+        }
+
+        // Stop jeopardy theme music
+        function stopJeopardyThemeSound() {
+            console.log('=== stopJeopardyThemeSound called ===');
+            if (jeopardyThemeAudio) {
+                try {
+                    jeopardyThemeAudio.pause();
+                    jeopardyThemeAudio.currentTime = 0;
+                    console.log('✅ Jeopardy theme sound stopped');
+                } catch (e) {
+                    console.log('❌ Error stopping jeopardy theme sound:', e);
+                }
+                jeopardyThemeAudio = null;
+            } else {
+                console.log('No jeopardy theme audio to stop');
             }
         }
 
